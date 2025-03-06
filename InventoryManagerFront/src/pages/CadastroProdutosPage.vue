@@ -3,6 +3,10 @@
     <q-card-section>
       <q-toolbar>
         <q-toolbar-title>Cadastro de Produtos</q-toolbar-title>
+        <q-space />
+        <q-btn dense flat icon="close" v-close-popup>
+          <q-tooltip>Fechar</q-tooltip>
+        </q-btn>
       </q-toolbar>
 
       <q-form @submit.prevent="salvarProduto" class="q-gutter-md">

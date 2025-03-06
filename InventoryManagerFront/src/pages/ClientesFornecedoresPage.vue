@@ -47,15 +47,15 @@ const filtro = ref({
 });
 
 const colunas = [
-  { name: 'nome', label: 'Nome', field: 'nome', align: 'left', sortable: true },
-  { name: 'cpfCnpj', label: 'CPF/CNPJ', field: 'cpfCnpj', align: 'left', sortable: true },
-  { name: 'telefone', label: 'Telefone', field: 'telefone', align: 'left' },
-  { name: 'celular', label: 'Celular', field: 'celular', align: 'left' },
-  { name: 'email', label: 'E-mail', field: 'email', align: 'left' },
-  { name: 'endereco', label: 'Endereço', field: 'endereco', align: 'left' },
-  { name: 'eCliente', label: 'Cliente', field: row => (row.eCliente ? 'Sim' : 'Não'), align: 'center' },
-  { name: 'eFornecedor', label: 'Fornecedor', field: row => (row.eFornecedor ? 'Sim' : 'Não'), align: 'center' },
-  { name: 'acoes', label: 'Ações', field: 'acoes', align: 'center' }
+  { name: 'nome', label: 'Nome', field: 'nome', align: 'left' as const, sortable: true },
+  { name: 'cpfCnpj', label: 'CPF/CNPJ', field: 'cpfCnpj', align: 'left' as const, sortable: true },
+  { name: 'telefone', label: 'Telefone', field: 'telefone', align: 'left' as const },
+  { name: 'celular', label: 'Celular', field: 'celular', align: 'left' as const },
+  { name: 'email', label: 'E-mail', field: 'email', align: 'left' as const },
+  { name: 'endereco', label: 'Endereço', field: 'endereco', align: 'left' as const },
+  { name: 'eCliente', label: 'Cliente', field: row => (row.eCliente ? 'Sim' : 'Não'), align: 'center' as const },
+  { name: 'eFornecedor', label: 'Fornecedor', field: row => (row.eFornecedor ? 'Sim' : 'Não'), align: 'center' as const },
+  { name: 'acoes', label: 'Ações', field: 'acoes', align: 'center' as const }
 ];
 
 const registros = ref([

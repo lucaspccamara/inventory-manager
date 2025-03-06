@@ -1,4 +1,6 @@
 using InventoryManagerApi.Data;
+using InventoryManagerApi.Repositories;
+using InventoryManagerApi.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 
@@ -8,7 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=inventory_manager.db"));
 
-// Add services to the container.
+// Registro dos serviços e repositórios
+builder.Services.AddScoped<UnidadeMedidaService>();
+builder.Services.AddScoped<UnidadeMedidaRepository>();
 
 builder.Services.AddCors(options =>
 {

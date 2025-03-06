@@ -3,8 +3,12 @@
     <q-card-section>
       <q-toolbar>
         <q-toolbar-title>Cadastro de Clientes e Fornecedores</q-toolbar-title>
+        <q-space />
+        <q-btn dense flat icon="close" v-close-popup>
+          <q-tooltip>Fechar</q-tooltip>
+        </q-btn>
       </q-toolbar>
-      
+
       <q-form @submit="salvarCadastro" class="q-gutter-md">
         <q-input v-model="cadastro.nome" label="Nome" required />
         <q-input v-model="cadastro.cpfCnpj" label="CPF/CNPJ" required />
