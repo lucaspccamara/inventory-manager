@@ -1,8 +1,20 @@
-export interface Todo {
+export interface UnidadesConversoes {
   id: number;
-  content: string;
+  origem: Unidades;
+  destino: Unidades;
+  fator: number;
 }
 
-export interface Meta {
-  totalCount: number;
+export interface Unidades {
+  id: number;
+  nome: string;
+  sigla: string;
+}
+
+export interface Produtos {
+  id: number | null;
+  nome: string;
+  unidadeCompra: Unidades | null;
+  unidadesVenda: UnidadesConversoes[];
+  menorUnidade: Unidades | null;
 }
