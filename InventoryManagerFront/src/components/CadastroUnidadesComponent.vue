@@ -39,6 +39,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { api } from '../boot/axios';
+import { Notify } from 'quasar';
 import { UnidadeMedida } from './models';
 
 const props = defineProps<{ idUnidade: number | null }>();
@@ -56,22 +57,33 @@ const carregarUnidade = async (id: number) => {
     const { data } = await api.get<UnidadeMedida>(`/unidades/${id}`);
     cadastro.value = data;
   } catch (error) {
-    console.error('Erro ao carregar unidade:', error);
+    Notify.create({
+      message: 'Erro ao carregar unidade!',
+      color: 'negative'
+    });
   }
 };
 
 const salvarCadastro = async () => {
   try {
     if (cadastro.value.id) {
-      await api.put(`/unidades/${cadastro.value.id}`, cadastro.value);
+      await api.put(`/unidades/${cadastro.value.id}`, cadastro.value).then((response) => {
+        if (response.status === 204)
+          Notify.create({message: 'Cadastro salvo com sucesso', color: 'positive' });
+      });
     } else {
-      await api.post('/unidades', cadastro.value);
+      await api.post('/unidades', cadastro.value).then((response) => {
+        if (response.status === 201)
+          Notify.create({message: 'Cadastro salvo com sucesso', color: 'positive' });
+      });
     }
     emit('atualizarLista');
     fecharDialog();
-    console.log("Cadastro salvo:", cadastro.value);
   } catch (error) {
-    console.error('Erro ao salvar cadastro:', error);
+    Notify.create({ 
+      message: 'Erro ao salvar cadastro',
+      color: 'negative'
+    });
   }
 };
 

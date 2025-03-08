@@ -61,31 +61,41 @@
           <template v-slot:body-cell-acoes="props">
             <q-td :props="props">
               <q-btn flat round icon="edit" @click="editarUnidade(props.row.id)" />
-              <q-btn flat round icon="delete" color="red" @click="deletarUnidade(props.row.id)" :disable="!props.row.status" />
+              <q-btn flat round icon="delete" color="red" @click="confirmarDelecao(props.row.id)" :disable="!props.row.status" />
             </q-td>
           </template>
         </q-table>
       </q-card-section>
     </q-card>
-  </q-page>
 
-  <q-dialog v-model="dialogCriarUnidadeMedida" persistent class="lg-dialog">
-    <CadastroUnidades
-      :idUnidade="idUnidade"
-      @atualizarLista="carregarUnidades"
-      @fecharDialog="dialogCriarUnidadeMedida = false"
-    />
-  </q-dialog>
+    <q-dialog v-model="dialogCriarUnidadeMedida" persistent class="lg-dialog">
+      <CadastroUnidades
+        :idUnidade="idUnidade"
+        @atualizarLista="carregarUnidades"
+        @fecharDialog="dialogCriarUnidadeMedida = false"
+      />
+    </q-dialog>
+  
+    <ConfirmDialog
+        v-model="dialogConfirmarDelecao"
+        message="Tem certeza que deseja excluir esta unidade?"
+        @confirm="deletarUnidadeConfirmada"
+      />
+  </q-page>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { Notify } from 'quasar';
 import { api } from '../boot/axios';
 import { UnidadeMedida, StatusOpcoesBoolean, SearchOptions, ApiRequest, ApiResponse } from './models';
 import CadastroUnidades from './CadastroUnidadesComponent.vue';
+import ConfirmDialog from './ConfirmDialogComponent.vue';
 
 const idUnidade = ref<number | null>(null);
 const dialogCriarUnidadeMedida = ref(false);
+const dialogConfirmarDelecao = ref(false);
+const idUnidadeParaDelecao = ref<number | null>(null);
 
 const request = ref<ApiRequest<{ nome?: string; sigla?: string; status?: boolean, searchType: string }>>({
   filter: { nome: '', sigla: '', status: true, searchType: 'contains' },
@@ -127,12 +137,31 @@ const editarUnidade = (id: number) => {
   cadastroUnidade(id);
 };
 
-const deletarUnidade = async (id: number) => {
-  try {
-    await api.delete(`/unidades/${id}`);
-    carregarUnidades();
-  } catch (error) {
-    console.error('Erro ao deletar unidade:', error);
+const confirmarDelecao = (id: number) => {
+  idUnidadeParaDelecao.value = id;
+  dialogConfirmarDelecao.value = true;
+};
+
+const deletarUnidadeConfirmada = async (confirm: boolean) => {
+  if (confirm && idUnidadeParaDelecao.value !== null) {
+    try {
+      await api.delete(`/unidades/${idUnidadeParaDelecao.value}`).finally(() => {
+        Notify.create({
+          message: 'Unidade deletada com sucesso!',
+          color: 'info'
+        });
+      });
+      carregarUnidades();
+    } catch (error) {
+      Notify.create({
+        message: 'Erro ao deletar unidade!',
+        color: 'negative'
+      });
+    } finally {
+      dialogConfirmarDelecao.value = false;
+    }
+  } else {
+    dialogConfirmarDelecao.value = false;
   }
 };
 
@@ -144,7 +173,10 @@ const carregarUnidades = async () => {
     response.value = data;
     pagination.value.rowsNumber = data.totalRecords;
   } catch (error) {
-    console.error('Erro ao carregar unidades:', error);
+    Notify.create({
+      message: 'Erro ao carregar unidades!',
+      color: 'negative'
+    });
   } finally {
     loading.value = false;
   }
