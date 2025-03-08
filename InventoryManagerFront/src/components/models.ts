@@ -36,7 +36,7 @@ export interface Produtos {
 }
 
 export interface UnidadeMedida {
-  id: number;
+  id: number | null;
   nome: string;
   sigla: string;
   status: boolean;
@@ -46,4 +46,11 @@ export const StatusOpcoesBoolean = [
   { label: 'Inativo', value: false },
   { label: 'Ativo', value: true },
   { label: 'Todos', value: null }
+];
+
+export const SearchOptions = [
+  { label: 'Exato', value: 'exact' },
+  { label: 'Contém', value: 'contains' },
+  { label: 'Começa com', value: 'startsWith' },
+  { label: 'Termina com', value: 'endsWith' }
 ];

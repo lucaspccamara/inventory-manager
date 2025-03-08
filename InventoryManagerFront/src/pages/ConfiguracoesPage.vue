@@ -30,8 +30,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import Unidades from 'components/UnidadesComponent.vue';
-import Conversoes from 'components/ConversoesComponent.vue';
+import Unidades from '../components/UnidadesComponent.vue';
+import Conversoes from '../components/ConversoesComponent.vue';
 
 const tab = ref('geral');
 </script>

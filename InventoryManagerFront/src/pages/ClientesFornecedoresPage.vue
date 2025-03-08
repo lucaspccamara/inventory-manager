@@ -18,10 +18,10 @@
       <q-separator />
       <q-card-section>
         <q-table :rows="listaFiltrada" :columns="colunas" row-key="id">
-          <template v-slot:body-cell(acoes)="props">
+          <template v-slot:body-cell-acoes="props">
             <q-td :props="props">
-              <q-btn icon="edit" color="primary" @click="editar(props.row)" />
-              <q-btn icon="delete" color="negative" @click="excluir(props.row)" />
+              <q-btn flat round icon="edit" @click="editar(props.row)" />
+              <q-btn flat round icon="delete" color="red" @click="excluir(props.row)" />
             </q-td>
           </template>
         </q-table>
@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import CadastroClientesFornecedores from './CadastroClientesFornecedoresPage.vue';
+import CadastroClientesFornecedores from '../components/CadastroClientesFornecedoresComponent.vue';
 
 const dialogCriarClienteFornecedor = ref(false);
 

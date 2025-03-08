@@ -1,6 +1,7 @@
 ﻿using InventoryManagerApi.Data;
 using InventoryManagerApi.Dtos;
 using InventoryManagerApi.Models;
+using InventoryManagerApi.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventoryManagerApi.Repositories
@@ -19,24 +20,46 @@ namespace InventoryManagerApi.Repositories
             return _context.UnidadesMedida.AsQueryable();
         }
 
-        public async Task<PagedResponse<UnidadeMedida>> GetPagedAsync(PagedRequest<UnidadeFilter> request)
+        public async Task<PagedResponse<UnidadeMedidaDto>> GetPagedAsync(PagedRequest<UnidadeFilter> request)
         {
-            var query = GetAll()
-                .Where(u => string.IsNullOrEmpty(request.Filter.Nome) || u.Nome.Contains(request.Filter.Nome))
-                .Where(u => string.IsNullOrEmpty(request.Filter.Sigla) || u.Sigla.Contains(request.Filter.Sigla))
-                .Where(u => request.Filter.Status == null || u.Status == request.Filter.Status);
+            var query = GetAll();
 
-            int totalRecords = await query.CountAsync();
+            if (request.Filter.Status.HasValue)
+            {
+                query = query.Where(u => u.Status == request.Filter.Status.Value);
+            }
+
+            if (!string.IsNullOrEmpty(request.Filter.Sigla))
+            {
+                query = query.Where(u => u.Sigla.Contains(request.Filter.Sigla));
+            }
+
+            // Executa a query e trás para a memória
+            var data = await query.ToListAsync();
+
+            // Aplica a lógica de tipo de busca
+            data = data
+                .Where(u => string.IsNullOrEmpty(request.Filter.Nome) || SearchUtils.ApplySearchType(u.Nome, request.Filter.Nome, request.Filter.SearchType))
+                .ToList();
+
+            int totalRecords = data.Count;
             int totalPages = (int)Math.Ceiling((double)totalRecords / request.PageSize);
 
-            var data = await query
+            var pagedData = data
                 .Skip((request.Page - 1) * request.PageSize)
                 .Take(request.PageSize)
-                .ToListAsync();
+                .Select(u => new UnidadeMedidaDto
+                {
+                    Id = u.Id,
+                    Nome = u.Nome,
+                    Sigla = u.Sigla,
+                    Status = u.Status
+                })
+                .ToList();
 
-            return new PagedResponse<UnidadeMedida>
+            return new PagedResponse<UnidadeMedidaDto>
             {
-                Data = data,
+                Data = pagedData,
                 TotalRecords = totalRecords,
                 Page = request.Page,
                 PageSize = request.PageSize,
@@ -44,9 +67,21 @@ namespace InventoryManagerApi.Repositories
             };
         }
 
-        public async Task<UnidadeMedida?> GetByIdAsync(int id)
+        public async Task<UnidadeMedidaDto?> GetByIdAsync(int id)
         {
-            return await _context.UnidadesMedida.FindAsync(id);
+            var unidade = await _context.UnidadesMedida.FindAsync(id);
+            if (unidade == null)
+            {
+                return null;
+            }
+
+            return new UnidadeMedidaDto
+            {
+                Id = unidade.Id,
+                Nome = unidade.Nome,
+                Sigla = unidade.Sigla,
+                Status = unidade.Status
+            };
         }
 
         public async Task AddAsync(UnidadeMedida unidade)

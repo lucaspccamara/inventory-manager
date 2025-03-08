@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { Produtos } from '../components/models';
+import type { Produtos } from './models';
 
 const produto = ref<Produtos>({
   id: null,

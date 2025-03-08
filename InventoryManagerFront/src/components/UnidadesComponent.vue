@@ -2,11 +2,29 @@
   <q-page padding>
     <q-card>
       <q-card-section>
+        <q-btn
+          class="q-mb-md"
+          color="primary"
+          label="Adicionar Nova"
+          @click="cadastroUnidade(null)"
+        />
         <div class="row q-col-gutter-md">
-          <div class="col-4">
-            <q-input v-model="request.filter.nome" label="Nome:" outlined dense />
+          <div class="col-5">
+            <q-btn-group spread outline>
+              <q-select
+                v-model="request.filter.searchType"
+                :options="SearchOptions"
+                label="Tipo de Busca:"
+                outlined
+                dense
+                emit-value
+                map-options
+                class="col"
+              />
+              <q-input v-model="request.filter.nome" label="Nome:" outlined dense class="col-9" />
+            </q-btn-group>
           </div>
-          <div class="col-4">
+          <div class="col-3">
             <q-input v-model="request.filter.sigla" label="Sigla:" outlined dense />
           </div>
           <div class="col">
@@ -34,19 +52,43 @@
           row-key="id"
           :loading="loading"
           @request="atualizarPaginacao"
-        />
+        >
+          <template v-slot:body-cell-status="props">
+            <q-td :props="props">
+              {{ props.row.status ? 'Ativo' : 'Inativo' }}
+            </q-td>
+          </template>
+          <template v-slot:body-cell-acoes="props">
+            <q-td :props="props">
+              <q-btn flat round icon="edit" @click="editarUnidade(props.row.id)" />
+              <q-btn flat round icon="delete" color="red" @click="deletarUnidade(props.row.id)" :disable="!props.row.status" />
+            </q-td>
+          </template>
+        </q-table>
       </q-card-section>
     </q-card>
   </q-page>
+
+  <q-dialog v-model="dialogCriarUnidadeMedida" persistent class="lg-dialog">
+    <CadastroUnidades
+      :idUnidade="idUnidade"
+      @atualizarLista="carregarUnidades"
+      @fecharDialog="dialogCriarUnidadeMedida = false"
+    />
+  </q-dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { api } from '../boot/axios';
-import { UnidadeMedida, StatusOpcoesBoolean, ApiRequest, ApiResponse } from './models';
+import { UnidadeMedida, StatusOpcoesBoolean, SearchOptions, ApiRequest, ApiResponse } from './models';
+import CadastroUnidades from './CadastroUnidadesComponent.vue';
 
-const request = ref<ApiRequest<{ nome?: string; sigla?: string; status?: boolean }>>({
-  filter: { nome: '', sigla: '', status: true },
+const idUnidade = ref<number | null>(null);
+const dialogCriarUnidadeMedida = ref(false);
+
+const request = ref<ApiRequest<{ nome?: string; sigla?: string; status?: boolean, searchType: string }>>({
+  filter: { nome: '', sigla: '', status: true, searchType: 'contains' },
   page: 1,
   pageSize: 10,
   sortBy: 'id',
@@ -72,8 +114,27 @@ const pagination = ref({
 const colunas = [
   { name: 'nome', label: 'Nome', field: 'nome', align: 'left' as const },
   { name: 'sigla', label: 'Sigla', field: 'sigla', align: 'left' as const },
-  { name: 'status', label: 'Status', field: 'status', align: 'left' as const }
+  { name: 'status', label: 'Status', field: 'status', align: 'left' as const },
+  { name: 'acoes', label: 'Ações', field: 'acoes', align: 'right' as const }
 ];
+
+function cadastroUnidade(id: number | null) {
+  idUnidade.value = id;
+  dialogCriarUnidadeMedida.value = true;
+}
+
+const editarUnidade = (id: number) => {
+  cadastroUnidade(id);
+};
+
+const deletarUnidade = async (id: number) => {
+  try {
+    await api.delete(`/unidades/${id}`);
+    carregarUnidades();
+  } catch (error) {
+    console.error('Erro ao deletar unidade:', error);
+  }
+};
 
 const carregarUnidades = async () => {
   try {

@@ -28,20 +28,27 @@ namespace InventoryManagerApi.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUnidade(int id)
         {
-            var unidade = await _service.ObterPorIdAsync(id);
-            if (unidade == null)
+            var unidadeDto = await _service.ObterPorIdAsync(id);
+            if (unidadeDto == null)
                 return NotFound();
-            return Ok(unidade);
+            return Ok(unidadeDto);
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostUnidade([FromBody] UnidadeMedida unidade)
+        public async Task<IActionResult> PostUnidade([FromBody] UnidadeMedidaDto unidadeDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            var unidade = new UnidadeMedida
+            {
+                Nome = unidadeDto.Nome,
+                Sigla = unidadeDto.Sigla,
+                Status = unidadeDto.Status
+            };
+
             await _service.AdicionarAsync(unidade);
-            return CreatedAtAction(nameof(GetUnidade), new { id = unidade.Id }, unidade);
+            return CreatedAtAction(nameof(GetUnidade), new { id = unidade.Id }, new { id = unidade.Id });
         }
 
         [HttpPut("{id}")]

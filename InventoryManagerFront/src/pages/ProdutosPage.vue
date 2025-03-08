@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import CadastroProdutos from './CadastroProdutosPage.vue';
+import CadastroProdutos from '../components/CadastroProdutosComponent.vue';
 
 const dialogCriarProduto = ref(false);
 
