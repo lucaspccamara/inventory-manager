@@ -1,6 +1,6 @@
 ﻿namespace InventoryManagerApi.Dtos
 {
-    public class UnidadeFilter
+    public class UnidadeMedidaFilter
     {
         public string? Nome { get; set; }
         public string? Sigla { get; set; }

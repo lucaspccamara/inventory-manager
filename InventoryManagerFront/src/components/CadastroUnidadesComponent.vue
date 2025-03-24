@@ -28,7 +28,7 @@
             val => val.length <= 10 || 'O número máximo de caracteres é 10'
           ]"
         />
-        <q-toggle v-model="cadastro.status" label="Status" :disable="props.idUnidade == null"/>
+        <q-toggle v-model="cadastro.status" :label="cadastro.status ? 'Status: Ativo' : 'Status: Inativo'" :disable="props.idUnidade == null"/>
         
         <q-btn type="submit" label="Salvar" color="primary" class="flex justify-end" />
       </q-form>
@@ -90,7 +90,6 @@ const salvarCadastro = async () => {
 const fecharDialog = () => {
   emit('fecharDialog');
 };
-
 
 onMounted(() => {
   if (props.idUnidade) {

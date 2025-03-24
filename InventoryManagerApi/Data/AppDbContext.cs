@@ -39,6 +39,12 @@ namespace InventoryManagerApi.Data
                 .HasForeignKey(puv => puv.UnidadeMedidaId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<ProdutoUnidadeVenda>()
+                .HasOne(puv => puv.MenorUnidade)
+                .WithMany()
+                .HasForeignKey(puv => puv.MenorUnidadeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<ItemPedido>()
                 .HasOne(i => i.Pedido)
                 .WithMany(p => p.Itens)

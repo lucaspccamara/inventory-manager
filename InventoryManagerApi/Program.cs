@@ -11,7 +11,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=inventory_manager.db"));
 
 // Registro dos serviços e repositórios
+builder.Services.AddScoped<ProdutoService>();
 builder.Services.AddScoped<UnidadeMedidaService>();
+
+builder.Services.AddScoped<ProdutoRepository>();
+builder.Services.AddScoped<ProdutoUnidadeVendaRepository>();
 builder.Services.AddScoped<UnidadeMedidaRepository>();
 
 builder.Services.AddCors(options =>

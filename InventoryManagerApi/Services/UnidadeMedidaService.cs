@@ -13,7 +13,7 @@ namespace InventoryManagerApi.Services
             _repository = repository;
         }
 
-        public async Task<PagedResponse<UnidadeMedidaDto>> ListarUnidadesAsync(PagedRequest<UnidadeFilter> request)
+        public async Task<PagedResponse<UnidadeMedidaDto>> ListarUnidadesAsync(PagedRequest<UnidadeMedidaFilter> request)
         {
             return await _repository.GetPagedAsync(request);
         }

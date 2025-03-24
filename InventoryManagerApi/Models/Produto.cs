@@ -13,18 +13,16 @@ namespace InventoryManagerApi.Models
         public string Descricao { get; set; }
 
         [Required]
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal PrecoPadrao { get; set; }
-
-        [Required]
         public int UnidadeMedidaCompraId { get; set; }
-        public virtual UnidadeMedida UnidadeMedidaCompra { get; set; }
 
         [Required]
         public int MenorUnidadeId { get; set; }
-        public virtual UnidadeMedida MenorUnidade { get; set; }
 
         public bool Status { get; set; } = true;
+
+        //Relacionamento com UnidadeMedida (unidade de compra e menor unidade)
+        public virtual UnidadeMedida UnidadeMedidaCompra { get; set; }
+        public virtual UnidadeMedida MenorUnidade { get; set; }
 
         // Relacionamento com ProdutoUnidadeVenda
         public virtual ICollection<ProdutoUnidadeVenda> UnidadesVenda { get; set; } = new List<ProdutoUnidadeVenda>();

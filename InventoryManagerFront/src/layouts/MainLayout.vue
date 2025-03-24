@@ -12,6 +12,7 @@
           <q-route-tab to="/clientes" label="Clientes e Fornecedores" icon="people" />
           <q-route-tab to="/entradas" label="Entradas" icon="add_business" />
           <q-route-tab to="/saidas" label="Saídas" icon="shopping_cart_checkout" />
+          <q-route-tab to="/estoque" label="Estoque" icon="warehouse" />
           <q-route-tab to="/relatorios" label="Relatórios" icon="bar_chart" />
           <q-route-tab to="/configuracoes" label="Configurações" icon="settings" />
         </q-tabs>

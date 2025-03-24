@@ -19,7 +19,7 @@ namespace InventoryManagerApi.Controllers
         }
 
         [HttpPost("lista")]
-        public async Task<IActionResult> GetUnidades([FromBody] PagedRequest<UnidadeFilter> request)
+        public async Task<IActionResult> GetUnidades([FromBody] PagedRequest<UnidadeMedidaFilter> request)
         {
             var result = await _service.ListarUnidadesAsync(request);
             return Ok(result);

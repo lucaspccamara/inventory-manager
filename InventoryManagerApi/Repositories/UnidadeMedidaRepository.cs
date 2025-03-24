@@ -20,7 +20,7 @@ namespace InventoryManagerApi.Repositories
             return _context.UnidadesMedida.AsQueryable();
         }
 
-        public async Task<PagedResponse<UnidadeMedidaDto>> GetPagedAsync(PagedRequest<UnidadeFilter> request)
+        public async Task<PagedResponse<UnidadeMedidaDto>> GetPagedAsync(PagedRequest<UnidadeMedidaFilter> request)
         {
             var query = GetAll();
 

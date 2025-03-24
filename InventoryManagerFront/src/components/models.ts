@@ -1,3 +1,4 @@
+//INTERFACES
 export interface ApiRequest<T = any> {
   filter: T;
   page: number;
@@ -14,25 +15,41 @@ export interface ApiResponse<T = any> {
   totalPages: number;
 }
 
-export interface UnidadesConversoes {
-  id: number;
-  origem: Unidades;
-  destino: Unidades;
-  fator: number;
-}
-
-export interface Unidades {
-  id: number;
-  nome: string;
-  sigla: string;
-}
-
-export interface Produtos {
+export interface Produto {
   id: number | null;
   nome: string;
-  unidadeCompra: Unidades | null;
-  unidadesVenda: UnidadesConversoes[];
-  menorUnidade: Unidades | null;
+  descricao: string;
+  status: boolean;
+  unidadeCompra: UnidadeMedida | null;
+  unidadesVenda: UnidadeConversao[];
+  menorUnidade: UnidadeMedida | null;
+}
+
+export interface ProdutoCreateDto {
+  id: number | null;
+  nome: string;
+  descricao: string;
+  status: boolean;
+  unidadeCompraId: number;
+  unidadesVenda: UnidadeConversaoCreateDto[];
+  menorUnidadeId: number;
+}
+
+export interface UnidadeConversao {
+  id: number | null;
+  origem: UnidadeMedida;
+  destino: UnidadeMedida;
+  fator: number;
+  precoPadrao: number;
+  editing?: boolean;
+}
+
+export interface UnidadeConversaoCreateDto {
+  id: number | null;
+  unidadeMedidaId: number;
+  menorUnidadeId: number;
+  fator: number;
+  precoPadrao: number;
 }
 
 export interface UnidadeMedida {
@@ -42,6 +59,7 @@ export interface UnidadeMedida {
   status: boolean;
 }
 
+//ENUMS
 export const StatusOpcoesBoolean = [
   { label: 'Inativo', value: false },
   { label: 'Ativo', value: true },
