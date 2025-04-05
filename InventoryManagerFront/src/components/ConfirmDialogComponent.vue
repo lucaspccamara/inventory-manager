@@ -37,7 +37,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['update:modelValue', 'confirm']);
+const emit = defineEmits(['update:modelValue', 'isConfirmado']);
 
 const isOpen = ref(props.modelValue);
 
@@ -48,12 +48,12 @@ watch(() => props.modelValue, (newVal) => {
 const cancelar = () => {
   isOpen.value = false;
   emit('update:modelValue', false);
-  emit('confirm', false);
+  emit('isConfirmado', false);
 };
 
 const confirmar = () => {
   isOpen.value = false;
   emit('update:modelValue', false);
-  emit('confirm', true);
+  emit('isConfirmado', true);
 };
 </script>

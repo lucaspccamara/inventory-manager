@@ -18,7 +18,7 @@
       
       <q-card-section>
         <q-list bordered>
-          <q-item v-for="conversao in conversoes" :key="conversao.id">
+          <q-item v-for="(conversao, index) in conversoes" :key="index">
             <q-item-section>
               <q-item-label>{{ conversao.origem }} → {{ conversao.destino }} ({{ conversao.fator }})</q-item-label>
             </q-item-section>
@@ -31,25 +31,19 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { UnidadesConversoes } from './models';
+import type { UnidadeConversao } from './models';
 
 const origem = ref(null);
 const destino = ref(null);
 const fator = ref(1);
-const conversoes = ref<UnidadesConversoes[]>([]);
+const conversoes = ref<UnidadeConversao[]>([]);
 const opcoesUnidades = ref(["kg", "g", "l", "ml", "m", "cm"]);
 
 function salvarConversao() {
-  if (origem.value && destino.value && fator.value) {
-    conversoes.value.push({
-      id: Date.now(),
-      origem: origem.value,
-      destino: destino.value,
-      fator: fator.value
-    });
-    origem.value = null;
-    destino.value = null;
-    fator.value = 1;
-  }
+  console.log('Salvando conversão:', {
+    origem: origem.value,
+    destino: destino.value,
+    fator: fator.value
+  });
 }
 </script>

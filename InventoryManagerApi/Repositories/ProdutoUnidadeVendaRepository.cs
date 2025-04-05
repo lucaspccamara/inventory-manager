@@ -23,6 +23,14 @@ namespace InventoryManagerApi.Repositories
             return await _context.ProdutosUnidadeVenda.FindAsync(id);
         }
 
+        public async Task<IEnumerable<ProdutoUnidadeVenda>> GetByProdutoIdAsync(int produtoId)
+        {
+            return await _context.ProdutosUnidadeVenda
+                .Include(u => u.UnidadeMedida)
+                .Where(puv => puv.ProdutoId == produtoId)
+                .ToListAsync();
+        }
+
         public async Task AddAsync(ProdutoUnidadeVenda produtoUnidadeVenda)
         {
             await _context.ProdutosUnidadeVenda.AddAsync(produtoUnidadeVenda);

@@ -10,6 +10,7 @@ namespace InventoryManagerApi.Models
         [Required, MaxLength(255)]
         public string Nome { get; set; }
 
+        [MaxLength(500)]
         public string Descricao { get; set; }
 
         [Required]
@@ -17,7 +18,7 @@ namespace InventoryManagerApi.Models
 
         [Required]
         public int MenorUnidadeId { get; set; }
-
+        public int Quantidade { get; set; }
         public bool Status { get; set; } = true;
 
         //Relacionamento com UnidadeMedida (unidade de compra e menor unidade)

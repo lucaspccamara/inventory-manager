@@ -11,48 +11,87 @@
 
       <q-form @submit.prevent="salvarProduto" class="row q-col-gutter-md">
         <div class="col-12">
-          <q-input v-model="produto.nome" label="Nome do Produto" required />
+          <q-input
+            v-model="produto.nome"
+            label="Nome do Produto *"
+            required
+            bottom-slots
+            counter maxlength="255"
+            :rules="[ val => val && val.length > 0 || 'Campo obrigatório' ]"
+          />
         </div>
 
         <div class="col-12">
-          <q-input v-model="produto.descricao" label="Descrição" type="textarea" autogrow />
-        </div>
-
-        <div class="col-6">
-          <q-select
-            v-model="produto.unidadeCompra"
-            :options="opcoesUnidades"
-            option-value="id"
-            option-label="nome"
-            label="Unidade de Compra"
-            required
-            @scroll="handleScroll"
-            @update:model-value="verificarAlteracaoUnidadeCompra"
+          <q-input
+            v-model="produto.descricao"
+            label="Descrição"
+            type="textarea"
+            autogrow
+            bottom-slots
+            counter maxlength="500"
           />
         </div>
 
         <div class="col-6">
           <q-select
-            v-model="produto.menorUnidade"
+            :model-value="produto.unidadeCompra"
             :options="opcoesUnidades"
             option-value="id"
             option-label="nome"
-            label="Menor Unidade de Venda"
+            label="Unidade de Compra *"
             required
+            :rules="[ val => val !== null || 'Campo obrigatório' ]"
             @scroll="handleScroll"
-            @update:model-value="verificarAlteracaoMenorUnidade"
+            @update:model-value="onUnidadeCompraChange"
           />
+        </div>
+
+        <div class="col-6">
+          <q-btn-group spread outline>
+            <q-select
+              :model-value="produto.menorUnidade"
+              :options="opcoesUnidades"
+              option-value="id"
+              option-label="nome"
+              label="Menor Unidade de Venda *"
+              required
+              :rules="[ val => val !== null || 'Campo obrigatório' ]"
+              @scroll="handleScroll"
+              @update:model-value="onMenorUnidadeChange"
+              class="col-8"
+            />
+            <q-input
+              v-model.number="produto.quantidade"
+              label="Estoque *"
+              type="number"
+              required
+              :rules="[
+                val => val !== '' || 'Campo obrigatório',
+                val => val >= 0 || 'Valor deve ser maior ou igual a zero'
+              ]"
+              :disable="!produto.menorUnidade"
+              :readonly="produto.id !== null && !quantidadeEditavel"
+              class="col"
+              @dblclick="habilitarEdicaoQuantidade"
+              @input="validarQuantidade"
+              @wheel.prevent
+            >
+              <q-tooltip class="bg-amber text-black text-body2" v-if="produto.id !== null && !quantidadeEditavel">
+                Para editar, clique duas vezes no campo.
+              </q-tooltip>
+            </q-input>
+          </q-btn-group>
         </div>
 
         <div class="col-12">
           <q-list bordered separator v-if="produto.unidadeCompra && produto.menorUnidade">
             <q-item-label header class="row justify-between items-center">
-              Unidades de Venda
+              <strong>Unidades de Venda</strong>
               <q-btn
                 label="Adicionar Unidade"
-                @click="adicionarUnidade(null)"
+                @click="adicionarUnidade()"
                 color="primary"
-                :disable="!produto.nome.trim() || !produto.unidadeCompra || !produto.menorUnidade"
+                :disable="!produto.nome.trim() || !produto.unidadeCompra || !produto.menorUnidade || unidadeEmEdicao"
               />
             </q-item-label>
             <q-item v-for="(unidade, index) in produto.unidadesVenda" :key="index">
@@ -69,9 +108,9 @@
   
                 <span>&nbsp;| 1&nbsp;</span>
   
-                <div v-if="unidade.editing && unidade.origem.id !== produto.menorUnidade.id">
+                <div v-if="unidade.editing && unidade.origem.id !== produto.unidadeCompra.id && unidade.origem.id !== produto.menorUnidade.id">
                   <q-select
-                    class="input-size-content"
+                    class="input-size-content unidade-select"
                     v-model="unidade.origem"
                     :options="opcoesUnidades"
                     option-value="id"
@@ -79,6 +118,7 @@
                     dense
                     rounded
                     outlined
+                    :error="unidade.origem.id == 0"
                   />
                 </div>
                 <strong v-else>{{ unidade.origem.nome }} ({{ unidade.origem.sigla }})</strong>
@@ -132,6 +172,17 @@
           </q-list>
         </div>
 
+        <div class="col-12">
+          <q-list bordered separator v-if="produto.unidadeCompra && produto.menorUnidade">
+            <q-item-label header><strong>Estoque por Unidade de Venda</strong></q-item-label>
+            <q-item v-for="(info, index) in informacoesQuantidades" :key="index">
+              <div class="row full-width items-center">
+                <span>{{ info.unidade }}: {{ info.quantidade }}</span>
+              </div>
+            </q-item>
+          </q-list>
+        </div>
+
         <div class="col-3">
           <q-toggle v-model="produto.status" :label="produto.status ? 'Status: Ativo' : 'Status: Inativo'" :disable="props.idProduto == null" />
         </div>
@@ -141,26 +192,26 @@
             type="submit"
             label="Salvar Produto"
             color="primary"
-            :disable="!produto.nome.trim() || !produto.unidadeCompra || !produto.menorUnidade"
+            :disable="!produto.nome.trim() || !produto.unidadeCompra || !produto.menorUnidade || unidadeEmEdicao"
           />
         </div>
       </q-form>
     </q-card-section>
   </q-card>
 
-  <ConfirmDialogComponent
-    v-if="confirmDialogVisible"
+  <ConfirmDialog
+    v-model="confirmDialogVisible"
     :mensagem="'Tem certeza que deseja alterar a ' + (unidadeAlterada === 'unidadeCompra' ? 'Unidade de Compra' : 'Menor Unidade de Venda') + '?'"
-    @confirmar="confirmarAlteracaoUnidade"
-    @cancelar="() => (confirmDialogVisible = false)"
+    @isConfirmado="confirmarAlteracaoUnidade"
   />
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { api } from 'src/boot/axios';
 import { Notify } from 'quasar';
 import type { Produto, ProdutoCreateDto, UnidadeMedida, UnidadeConversao, ApiRequest, ApiResponse } from './models';
+import ConfirmDialog from './ConfirmDialogComponent.vue';
 import CurrencyInput from './CurrencyInput.vue';
 
 const props = defineProps<{ idProduto: number | null }>();
@@ -188,9 +239,17 @@ const paginationUnidades = ref({
   rowsNumber: 0
 });
 
-const opcoesUnidades = ref<UnidadeMedida[]>([]);
-const confirmDialogVisible = ref(false);
-const unidadeAlterada = ref<null | 'unidadeCompra' | 'menorUnidade'>(null);
+const produto = ref<Produto>({
+  id: null,
+  nome: '',
+  descricao: '',
+  quantidade: 0,
+  status: true,
+  unidadeCompra: null,
+  unidadesVenda: [],
+  menorUnidade: null
+});
+
 const editingUnidadeConversao = ref<UnidadeConversao>({ 
   id: null,
   origem: {
@@ -209,55 +268,66 @@ const editingUnidadeConversao = ref<UnidadeConversao>({
   precoPadrao: 0
 });
 
-const carregarUnidades = async () => {
-  try {
-    const { data } = await api.post<ApiResponse<UnidadeMedida>>('/unidades/lista', requestUnidades.value);
+const opcoesUnidades = ref<UnidadeMedida[]>([]);
+const unidadeTemporaria = ref<UnidadeMedida | null>(null);
+const confirmDialogVisible = ref(false);
+const carregandoProduto = ref(false);
+const unidadeAlterada = ref<null | 'unidadeCompra' | 'menorUnidade'>(null);
+const quantidadeEditavel = ref(false);
 
-    responseUnidades.value = data;
-    paginationUnidades.value.rowsNumber = data.totalRecords;
+const unidadeEmEdicao = computed(() => {
+  return produto.value.unidadesVenda.some(unidade => unidade.editing);
+});
 
-    // Adicionar as novas unidades à lista de opções
-    data.data.forEach((unidade) => {
-      if (!opcoesUnidades.value.some(u => u.id === unidade.id)) {
-        opcoesUnidades.value.push(unidade);
-      }
-    });
-
-    // Incrementar a página para a próxima consulta
-    if (paginationUnidades.value.page < data.totalPages) {
-      paginationUnidades.value.page++;
-    } else {
-      // Desabilitar a consulta se não houver mais páginas
-      paginationUnidades.value.page = -1;
-    }
-  } catch (error) {
-    Notify.create({
-      message: 'Erro ao carregar unidades!',
-      color: 'negative'
-    });
+const habilitarEdicaoQuantidade = () => {
+  if (produto.value.id !== null) {
+    quantidadeEditavel.value = true;
   }
 };
 
-const handleScroll = (event: Event) => {
-  const target = event.target as HTMLElement;
-  if (target.scrollHeight - target.scrollTop === target.clientHeight) {
-    if (paginationUnidades.value.page !== -1) {
-      carregarUnidades();
-    }
+const validarQuantidade = () => {
+  if (produto.value.quantidade < 0 || isNaN(produto.value.quantidade)) {
+    produto.value.quantidade = 0; // Corrige para 0 se o valor for negativo ou inválido
   }
 };
 
-const produto = ref<Produto>({
-  id: null,
-  nome: '',
-  descricao: '',
-  status: true,
-  unidadeCompra: null,
-  unidadesVenda: [],
-  menorUnidade: null
+const informacoesQuantidades = computed(() => {
+  let restante = produto.value.quantidade;
+  const resultados: { unidade: string; quantidade: number }[] = [];
+
+  // Ordenar as unidades de venda pelo fator (do maior para o menor)
+  const unidadesOrdenadas = [...produto.value.unidadesVenda].sort((a, b) => b.fator - a.fator);
+
+  for (const unidade of unidadesOrdenadas) {
+    const quantidade = Math.floor(restante / unidade.fator);
+    restante = restante % unidade.fator;
+
+    resultados.push({
+      unidade: `${unidade.origem.nome} (${unidade.origem.sigla})`,
+      quantidade
+    });
+  }
+
+  // Adicionar o restante na menor unidade
+  if (restante > 0) {
+    resultados.push({
+      unidade: `${produto.value.menorUnidade?.nome} (${produto.value.menorUnidade?.sigla})`,
+      quantidade: restante
+    });
+  }
+
+  return resultados;
 });
 
 const salvarEditarUnidade = (unidade: UnidadeConversao) => {
+  if (unidade.origem.id == 0) {
+    Notify.create({
+      message: 'Por favor, selecione uma unidade válida.',
+      color: 'negative'
+    });
+    return;
+  }
+  
   unidade.editing = !unidade.editing;
 
   // Ordenar as unidades de venda do maior fator para o menor
@@ -268,7 +338,7 @@ const removerUnidade = (index: number) => {
   produto.value.unidadesVenda.splice(index, 1);
 };
 
-const adicionarUnidade = (index: number | null) => {
+const adicionarUnidade = () => {
   const novaUnidade = {
     id: editingUnidadeConversao.value.id,
     origem: { ...editingUnidadeConversao.value.origem },
@@ -297,6 +367,8 @@ const adicionarUnidade = (index: number | null) => {
 };
 
 const atualizarUnidadesVenda = () => {
+  if (carregandoProduto.value) return;
+
   if (produto.value.unidadeCompra && produto.value.menorUnidade) {
     // Remover unidades antigas que não correspondem mais à unidade de compra ou menor unidade
     produto.value.unidadesVenda = produto.value.unidadesVenda.filter(unidade => {
@@ -376,12 +448,13 @@ const adicionarOuAtualizarUnidade = (novaUnidade: UnidadeConversao) => {
   produto.value.unidadesVenda.sort((a, b) => b.fator - a.fator);
 };
 
-const verificarAlteracaoUnidadeCompra = (novaUnidadeCompra: UnidadeMedida) => {
+const onUnidadeCompraChange = (novaUnidadeCompra: UnidadeMedida) => {
   if (produto.value.id !== null) {
     // Exibir diálogo de confirmação durante a edição
+    unidadeTemporaria.value = novaUnidadeCompra;
     unidadeAlterada.value = 'unidadeCompra';
     confirmDialogVisible.value = true;
-    editingUnidadeConversao.value.origem = novaUnidadeCompra;
+    //editingUnidadeConversao.value.origem = novaUnidadeCompra;
   } else {
     // Alterar diretamente durante o cadastro
     produto.value.unidadeCompra = novaUnidadeCompra;
@@ -389,12 +462,13 @@ const verificarAlteracaoUnidadeCompra = (novaUnidadeCompra: UnidadeMedida) => {
   }
 };
 
-const verificarAlteracaoMenorUnidade = (novaMenorUnidade: UnidadeMedida) => {
+const onMenorUnidadeChange = (novaMenorUnidade: UnidadeMedida) => {
   if (produto.value.id !== null) {
     // Exibir diálogo de confirmação durante a edição
+    unidadeTemporaria.value = novaMenorUnidade;
     unidadeAlterada.value = 'menorUnidade';
     confirmDialogVisible.value = true;
-    editingUnidadeConversao.value.destino = novaMenorUnidade;
+    //editingUnidadeConversao.value.destino = novaMenorUnidade;
   } else {
     // Alterar diretamente durante o cadastro
     produto.value.menorUnidade = novaMenorUnidade;
@@ -402,28 +476,48 @@ const verificarAlteracaoMenorUnidade = (novaMenorUnidade: UnidadeMedida) => {
   }
 };
 
-const confirmarAlteracaoUnidade = () => {
-  if (unidadeAlterada.value === 'unidadeCompra') {
-    produto.value.unidadeCompra = editingUnidadeConversao.value.origem;
-  } else if (unidadeAlterada.value === 'menorUnidade') {
-    produto.value.menorUnidade = editingUnidadeConversao.value.destino;
+const confirmarAlteracaoUnidade = (isConfirmado: boolean) => {
+  if (isConfirmado) {
+    if (unidadeAlterada.value === 'unidadeCompra') {
+      produto.value.unidadeCompra = unidadeTemporaria.value;
+    } else if (unidadeAlterada.value === 'menorUnidade') {
+      produto.value.menorUnidade = unidadeTemporaria.value;
+    }
+    atualizarUnidadesVenda();
+    confirmDialogVisible.value = false;
+    unidadeTemporaria.value = null;
+    unidadeAlterada.value = null;
+  } else {
+    confirmDialogVisible.value = false
   }
-  atualizarUnidadesVenda();
-  confirmDialogVisible.value = false;
 };
 
-const salvarProduto = () => {
-  cadastrarProduto();
+const carregarProduto = async (id: number) => {
+  try {
+    carregandoProduto.value = true;
+    const { data } = await api.get<Produto>(`/produtos/${id}`);
+    produto.value = data;
+  } catch (error) {
+    Notify.create({
+      message: 'Erro ao carregar produto!',
+      color: 'negative'
+    });
+  } finally {
+    carregandoProduto.value = false;
+  }
 };
 
-const cadastrarProduto = async () => {
+const salvarProduto = async () => {
   const protudoDto = {
+    id: produto.value.id,
     nome: produto.value.nome,
     descricao: produto.value.descricao,
+    quantidade: produto.value.quantidade,
     status: produto.value.status,
     unidadeCompraId: produto.value.unidadeCompra?.id,
     menorUnidadeId: produto.value.menorUnidade?.id,
     unidadesVenda: produto.value.unidadesVenda.map(u => ({
+      id: u.id,
       unidadeMedidaId: u.origem.id,
       menorUnidadeId: u.destino.id,
       fator: u.fator,
@@ -431,19 +525,39 @@ const cadastrarProduto = async () => {
     }))
   } as ProdutoCreateDto;
 
-  try {
-    await api.post('/produtos', protudoDto).then((response) => {
-      if (response.status === 201)
-        Notify.create({message: 'Cadastro salvo com sucesso', color: 'positive' });
-    });
-
-    //emit('atualizarLista');
-    //fecharDialog();
-  } catch (error) {
-    Notify.create({ 
-      message: 'Erro ao salvar cadastro',
-      color: 'negative'
-    });
+  if (protudoDto.id === null) {
+    // Salvar novo produto
+    try {
+      console.log('Produto DTO:', protudoDto);
+      await api.post('/produtos', protudoDto).then((response) => {
+        if (response.status === 201) {
+          Notify.create({message: 'Cadastro salvo com sucesso', color: 'positive' });
+          emit('atualizarLista');
+          emit('fecharDialog');
+        }
+      });
+    } catch (error) {
+      Notify.create({ 
+        message: 'Erro ao salvar cadastro',
+        color: 'negative'
+      });
+    }
+  } else {
+    // Atualizar produto
+    try {
+      await api.put(`/produtos/${protudoDto.id}`, protudoDto).then((response) => {
+        if (response.status === 204) {
+          Notify.create({message: 'Cadastro atualizado com sucesso', color: 'positive' });
+          emit('atualizarLista');
+          emit('fecharDialog');
+        }
+      });
+    } catch (error) {
+      Notify.create({ 
+        message: 'Erro ao atualizar cadastro',
+        color: 'negative'
+      });
+    }
   }
 };
 
@@ -451,14 +565,49 @@ const formatarPreco = (valor: number) => {
   return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-watch(() => produto.value.unidadeCompra, atualizarUnidadesVenda);
-watch(() => produto.value.menorUnidade, atualizarUnidadesVenda);
+const carregarUnidades = async () => {
+  try {
+    const { data } = await api.post<ApiResponse<UnidadeMedida>>('/unidades/lista', requestUnidades.value);
+
+    responseUnidades.value = data;
+    paginationUnidades.value.rowsNumber = data.totalRecords;
+
+    // Adicionar as novas unidades à lista de opções
+    data.data.forEach((unidade) => {
+      if (!opcoesUnidades.value.some(u => u.id === unidade.id)) {
+        opcoesUnidades.value.push(unidade);
+      }
+    });
+
+    // Incrementar a página para a próxima consulta
+    if (paginationUnidades.value.page < data.totalPages) {
+      paginationUnidades.value.page++;
+    } else {
+      // Desabilitar a consulta se não houver mais páginas
+      paginationUnidades.value.page = -1;
+    }
+  } catch (error) {
+    Notify.create({
+      message: 'Erro ao carregar unidades!',
+      color: 'negative'
+    });
+  }
+};
+
+const handleScroll = (event: Event) => {
+  const target = event.target as HTMLElement;
+  if (target.scrollHeight - target.scrollTop === target.clientHeight) {
+    if (paginationUnidades.value.page !== -1) {
+      carregarUnidades();
+    }
+  }
+};
 
 carregarUnidades();
 
 onMounted(() => {
   if (props.idProduto) {
-    //carregarProduto(props.idProduto);
+    carregarProduto(props.idProduto);
   }
 });
 </script>
@@ -467,4 +616,8 @@ onMounted(() => {
 .input-size-content{
   width: fit-content;
 } 
+
+.unidade-select {
+  padding-bottom: 0 !important;
+}
 </style>

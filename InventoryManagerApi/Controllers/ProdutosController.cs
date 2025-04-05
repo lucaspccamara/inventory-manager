@@ -18,55 +18,46 @@ namespace InventoryManagerApi.Controllers
             _service = service;
         }
 
-        //[HttpGet]
-        //public async Task<ActionResult<IEnumerable<Produto>>> GetProdutos([FromQuery] string? nome, [FromQuery] bool? status)
-        //{
-        //    var query = _context.Produtos.AsQueryable();
-
-        //    if (!string.IsNullOrWhiteSpace(nome))
-        //        query = query.Where(p => p.Nome.Contains(nome));
-
-        //    if (status.HasValue)
-        //        query = query.Where(p => p.Status == status.Value);
-
-        //    return await query.ToListAsync();
-        //}
+        [HttpPost("lista")]
+        public async Task<IActionResult> GetProdutos([FromBody] PagedRequest<ProdutoFilter> request)
+        {
+            var result = await _service.ListarProdutosAsync(request);
+            return Ok(result);
+        }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProduto(int id)
         {
             var produto = await _service.ObterPorIdAsync(id);
-            if (produto == null || !produto.Status) return NotFound();
+            if (produto == null) return NotFound();
             return Ok(produto);
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostProduto(ProdutoDto produtoDto)
+        public async Task<IActionResult> PostProduto(ProdutoCreateDto produtoCreateDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            await _service.AdicionarAsync(produtoDto);
-            return CreatedAtAction(nameof(GetProduto), new { id = produtoDto.Id }, new { id = produtoDto.Id });
+            var id = await _service.AdicionarAsync(produtoCreateDto);
+            return CreatedAtAction(nameof(GetProduto), new { id = id }, new { id = id });
         }
 
-        //[HttpPut("{id}")]
-        //public async Task<IActionResult> PutProduto(int id, Produto produto)
-        //{
-        //    if (id != produto.Id) return BadRequest();
-        //    _context.Entry(produto).State = EntityState.Modified;
-        //    await _context.SaveChangesAsync();
-        //    return NoContent();
-        //}
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutProduto(int id, ProdutoCreateDto produtoUpdateDto)
+        {
+            if (id != produtoUpdateDto.Id)
+                return BadRequest("ID da URL não corresponde ao ID da entidade.");
 
-        //[HttpDelete("{id}")]
-        //public async Task<IActionResult> DeleteProduto(int id)
-        //{
-        //    var produto = await _context.Produtos.FindAsync(id);
-        //    if (produto == null) return NotFound();
-        //    produto.Status = false;
-        //    await _context.SaveChangesAsync();
-        //    return NoContent();
-        //}
+            await _service.AtualizarAsync(produtoUpdateDto);
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProduto(int id)
+        {
+            await _service.RemoverAsync(id);
+            return NoContent();
+        }
     }
 }

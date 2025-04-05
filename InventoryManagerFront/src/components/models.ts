@@ -19,16 +19,25 @@ export interface Produto {
   id: number | null;
   nome: string;
   descricao: string;
+  quantidade: number;
   status: boolean;
   unidadeCompra: UnidadeMedida | null;
   unidadesVenda: UnidadeConversao[];
   menorUnidade: UnidadeMedida | null;
 }
 
+export interface ProdutoTableDto {
+  id: number;
+  nome: string;
+  quantidade: number;
+  status: boolean;
+}
+
 export interface ProdutoCreateDto {
   id: number | null;
   nome: string;
   descricao: string;
+  quantidade: number;
   status: boolean;
   unidadeCompraId: number;
   unidadesVenda: UnidadeConversaoCreateDto[];

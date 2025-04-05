@@ -39,7 +39,7 @@
             />
           </div>
           <div class="col flex justify-end">
-            <q-btn label="Buscar" @click="carregarUnidades" color="primary" />
+            <q-btn label="Buscar" @click="buscarUnidades" color="primary" />
           </div>
         </div>
       </q-card-section>
@@ -71,7 +71,7 @@
     <q-dialog v-model="dialogCriarUnidadeMedida" persistent class="lg-dialog">
       <CadastroUnidades
         :idUnidade="idUnidade"
-        @atualizarLista="carregarUnidades"
+        @atualizarLista="buscarUnidades"
         @fecharDialog="dialogCriarUnidadeMedida = false"
       />
     </q-dialog>
@@ -79,7 +79,7 @@
     <ConfirmDialog
         v-model="dialogConfirmarDelecao"
         message="Tem certeza que deseja excluir esta unidade?"
-        @confirm="deletarUnidadeConfirmada"
+        @isConfirmado="deletarUnidade"
       />
   </q-page>
 </template>
@@ -125,7 +125,7 @@ const colunas = [
   { name: 'nome', label: 'Nome', field: 'nome', align: 'left' as const },
   { name: 'sigla', label: 'Sigla', field: 'sigla', align: 'left' as const },
   { name: 'status', label: 'Status', field: 'status', align: 'left' as const },
-  { name: 'acoes', label: 'Ações', field: 'acoes', align: 'right' as const }
+  { name: 'acoes', label: 'Ações', field: 'acoes', align: 'center' as const, style: 'width: 100px' }
 ];
 
 function cadastroUnidade(id: number | null) {
@@ -142,8 +142,8 @@ const confirmarDelecao = (id: number) => {
   dialogConfirmarDelecao.value = true;
 };
 
-const deletarUnidadeConfirmada = async (confirm: boolean) => {
-  if (confirm && idUnidadeParaDelecao.value !== null) {
+const deletarUnidade = async (isConfirmado: boolean) => {
+  if (isConfirmado && idUnidadeParaDelecao.value !== null) {
     try {
       await api.delete(`/unidades/${idUnidadeParaDelecao.value}`).finally(() => {
         Notify.create({
@@ -151,7 +151,7 @@ const deletarUnidadeConfirmada = async (confirm: boolean) => {
           color: 'info'
         });
       });
-      carregarUnidades();
+      buscarUnidades();
     } catch (error) {
       Notify.create({
         message: 'Erro ao deletar unidade!',
@@ -165,7 +165,7 @@ const deletarUnidadeConfirmada = async (confirm: boolean) => {
   }
 };
 
-const carregarUnidades = async () => {
+const buscarUnidades = async () => {
   try {
     loading.value = true;
     const { data } = await api.post<ApiResponse<UnidadeMedida>>('/unidades/lista', request.value);
@@ -186,12 +186,12 @@ const atualizarPaginacao = (props: { pagination: any }) => {
   const { page, rowsPerPage } = props.pagination;
   request.value.page = page;
   request.value.pageSize = rowsPerPage;
-  carregarUnidades();
+  buscarUnidades();
 };
 
 watch(() => request.value.filter, () => {
   request.value.page = 1;
 }, { deep: true });
 
-carregarUnidades();
+buscarUnidades();
 </script>

@@ -9,9 +9,9 @@
         </q-btn>
       </q-toolbar>
 
-      <q-form @submit="salvarCadastro" class="q-gutter-md">
+      <q-form @submit="salvarUnidade" class="q-gutter-md">
         <q-input
-          v-model="cadastro.nome"
+          v-model="unidade.nome"
           label="Nome"
           required
           :rules="[
@@ -20,7 +20,7 @@
           ]"
         />
         <q-input
-          v-model="cadastro.sigla"
+          v-model="unidade.sigla"
           label="Sigla"
           required
           :rules="[
@@ -28,7 +28,7 @@
             val => val.length <= 10 || 'O número máximo de caracteres é 10'
           ]"
         />
-        <q-toggle v-model="cadastro.status" :label="cadastro.status ? 'Status: Ativo' : 'Status: Inativo'" :disable="props.idUnidade == null"/>
+        <q-toggle v-model="unidade.status" :label="unidade.status ? 'Status: Ativo' : 'Status: Inativo'" :disable="props.idUnidade == null"/>
         
         <q-btn type="submit" label="Salvar" color="primary" class="flex justify-end" />
       </q-form>
@@ -45,7 +45,7 @@ import { UnidadeMedida } from './models';
 const props = defineProps<{ idUnidade: number | null }>();
 const emit = defineEmits(['atualizarLista', 'fecharDialog']);
 
-const cadastro = ref<UnidadeMedida>({
+const unidade = ref<UnidadeMedida>({
   id: null,
   nome: '',
   sigla: '',
@@ -55,7 +55,7 @@ const cadastro = ref<UnidadeMedida>({
 const carregarUnidade = async (id: number) => {
   try {
     const { data } = await api.get<UnidadeMedida>(`/unidades/${id}`);
-    cadastro.value = data;
+    unidade.value = data;
   } catch (error) {
     Notify.create({
       message: 'Erro ao carregar unidade!',
@@ -64,31 +64,27 @@ const carregarUnidade = async (id: number) => {
   }
 };
 
-const salvarCadastro = async () => {
+const salvarUnidade = async () => {
   try {
-    if (cadastro.value.id) {
-      await api.put(`/unidades/${cadastro.value.id}`, cadastro.value).then((response) => {
+    if (unidade.value.id) {
+      await api.put(`/unidades/${unidade.value.id}`, unidade.value).then((response) => {
         if (response.status === 204)
           Notify.create({message: 'Cadastro salvo com sucesso', color: 'positive' });
       });
     } else {
-      await api.post('/unidades', cadastro.value).then((response) => {
+      await api.post('/unidades', unidade.value).then((response) => {
         if (response.status === 201)
           Notify.create({message: 'Cadastro salvo com sucesso', color: 'positive' });
       });
     }
     emit('atualizarLista');
-    fecharDialog();
+    emit('fecharDialog');
   } catch (error) {
     Notify.create({ 
       message: 'Erro ao salvar cadastro',
       color: 'negative'
     });
   }
-};
-
-const fecharDialog = () => {
-  emit('fecharDialog');
 };
 
 onMounted(() => {

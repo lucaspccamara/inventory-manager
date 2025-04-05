@@ -89,5 +89,10 @@ const onBlur = () => {
 <style lang="scss" scoped>
 .currency-input {
   padding: 0;
+
+  // Usando ::v-deep para alcançar o input interno
+  ::v-deep(.q-field__native) {
+    padding: 6px 0px;
+  }
 }	
 </style>
