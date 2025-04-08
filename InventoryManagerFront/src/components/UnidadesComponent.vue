@@ -2,12 +2,15 @@
   <q-page padding>
     <q-card>
       <q-card-section>
-        <q-btn
-          class="q-mb-md"
-          color="primary"
-          label="Adicionar Nova"
-          @click="cadastroUnidade(null)"
-        />
+        <div class="col flex justify-between q-mb-md">
+          <q-btn
+            color="primary"
+            label="Adicionar Unidade"
+            @click="cadastroUnidade(null)"
+          />
+          <q-btn label="Buscar" @click="buscarUnidades" color="primary" />
+        </div>
+
         <div class="row q-col-gutter-md">
           <div class="col-5">
             <q-btn-group spread outline>
@@ -37,9 +40,6 @@
               emit-value
               map-options
             />
-          </div>
-          <div class="col flex justify-end">
-            <q-btn label="Buscar" @click="buscarUnidades" color="primary" />
           </div>
         </div>
       </q-card-section>

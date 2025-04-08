@@ -1,10 +1,14 @@
 <template>
   <q-page padding>
-    <q-btn
-    class="q-mb-md"
-    color="primary"
-    label="Adicionar Produto"
-    @click="cadastroProduto(null)" />
+    <div class="col flex justify-between q-mb-md">
+      <q-btn
+        color="primary"
+        label="Adicionar Produto"
+        @click="cadastroProduto(null)"
+      />
+
+      <q-btn label="Buscar" @click="buscarProdutos" color="primary" />
+    </div>
 
     <div class="row q-col-gutter-md q-mb-md">
       <div class="col-5">
@@ -22,10 +26,19 @@
           <q-input v-model="request.filter.nome" label="Nome:" outlined dense class="col-9" />
         </q-btn-group>
       </div>
-      <div class="col-3">
-        <q-input type="number" v-model="request.filter.id" label="Id:" outlined dense />
+      <div class="col-1">
+        <q-input
+          v-model="request.filter.id"
+          label="Id:"
+          maxlength="15"
+          mask="###.###.###.###"
+          reverse-fill-mask
+          unmasked-value
+          outlined
+          dense
+        />
       </div>
-      <div class="col">
+      <div class="col-1">
         <q-select
           v-model="request.filter.status"
           :options="StatusOpcoesBoolean"
@@ -35,9 +48,6 @@
           emit-value
           map-options
         />
-      </div>
-      <div class="col flex justify-end">
-        <q-btn label="Buscar" @click="buscarProdutos" color="primary" />
       </div>
     </div>
 
@@ -51,11 +61,11 @@
       <template v-slot:body-cell-estoque="props">
         <q-td :props="props">
           <q-badge color="primary">
-            {{ props.row.quantidade }}
+            {{ formatarQuantidade(props.row.quantidade) }}
 
             <q-tooltip class="bg-amber text-body2 text-black">
               <div v-for="(quantidade, index) in props.row.quantidadesPorUnidade" :key="index">
-                <strong>{{ quantidade.unidade }}:</strong> {{ quantidade.quantidade }}
+                <strong>{{ quantidade.unidade }}:</strong> {{ formatarQuantidade(quantidade.quantidade) }}
               </div>
             </q-tooltip>
           </q-badge>
@@ -135,6 +145,10 @@ const colunas = [
   { name: 'acoes', label: 'Ações', field: 'acoes', align: 'center' as const, style: 'width: 100px' }
 ];
 
+const formatarQuantidade = (quantidade: number): string => {
+  return quantidade.toLocaleString('pt-BR');
+};
+
 const buscarProdutos = async () => {
   try {
     loading.value = true;
@@ -205,6 +219,14 @@ const deletarProduto = async (isConfirmado: boolean) => {
 watch(() => request.value.filter, () => {
   request.value.page = 1;
 }, { deep: true });
+
+watch(() => request.value.filter.id, (newValue) => {
+  if (newValue) {
+    request.value.filter.id = newValue;
+  } else {
+    request.value.filter.id = null;
+  }
+}, { immediate: true });
 
 buscarProdutos();
 </script>

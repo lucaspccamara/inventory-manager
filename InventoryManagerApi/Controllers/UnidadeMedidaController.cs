@@ -1,9 +1,7 @@
-using InventoryManagerApi.Data;
 using InventoryManagerApi.Dtos;
 using InventoryManagerApi.Models;
 using InventoryManagerApi.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace InventoryManagerApi.Controllers
 {

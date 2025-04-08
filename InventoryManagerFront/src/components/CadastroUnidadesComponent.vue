@@ -9,28 +9,39 @@
         </q-btn>
       </q-toolbar>
 
-      <q-form @submit="salvarUnidade" class="q-gutter-md">
-        <q-input
-          v-model="unidade.nome"
-          label="Nome"
-          required
-          :rules="[
-            val => val.length >= 2 || 'O número mínimo de caracteres é 2',
-            val => val.length <= 25 || 'O número máximo de caracteres é 25'
-          ]"
-        />
-        <q-input
-          v-model="unidade.sigla"
-          label="Sigla"
-          required
-          :rules="[
-            val => val.length >= 1 || 'O número mínimo de caracteres é 1',
-            val => val.length <= 10 || 'O número máximo de caracteres é 10'
-          ]"
-        />
-        <q-toggle v-model="unidade.status" :label="unidade.status ? 'Status: Ativo' : 'Status: Inativo'" :disable="props.idUnidade == null"/>
+      <q-form @submit="salvarUnidade" class="row q-col-gutter-md">
+        <div class="col-12">
+          <q-input
+            v-model="unidade.nome"
+            label="Nome"
+            required
+            :rules="[
+              val => val.length >= 2 || 'O número mínimo de caracteres é 2',
+              val => val.length <= 25 || 'O número máximo de caracteres é 25'
+            ]"
+          />
+        </div>
+        <div class="col-12">
+          <q-input
+            v-model="unidade.sigla"
+            label="Sigla"
+            required
+            :rules="[
+              val => val.length >= 1 || 'O número mínimo de caracteres é 1',
+              val => val.length <= 10 || 'O número máximo de caracteres é 10'
+            ]"
+          />
+        </div>
         
-        <q-btn type="submit" label="Salvar" color="primary" class="flex justify-end" />
+        <div class="col-12 flex justify-between">
+          <q-toggle
+            v-model="unidade.status"
+            :label="unidade.status ? 'Status: Ativo' : 'Status: Inativo'"
+            :disable="props.idUnidade == null"
+          />
+
+          <q-btn type="submit" label="Salvar" color="primary" />
+        </div>
       </q-form>
     </q-card-section>
   </q-card>

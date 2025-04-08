@@ -15,6 +15,28 @@ export interface ApiResponse<T = any> {
   totalPages: number;
 }
 
+export interface ClienteFornecedor {
+  id: number | null;
+  nome: string;
+  cpfCnpj: string;
+  email: string;
+  telefone: string;
+  celular: string;
+  endereco: string;
+  tipo: TipoClienteFornecedorType;
+  status: boolean;
+}
+
+export interface ClienteFornecedorTableDto {
+  id: number;
+  nome: string;
+  cpfCnpj: string;
+  email: string;
+  telefoneCelular: string;
+  tipo: TipoClienteFornecedorType;
+  status: boolean;
+}
+
 export interface Produto {
   id: number | null;
   nome: string;
@@ -69,15 +91,24 @@ export interface UnidadeMedida {
 }
 
 //ENUMS
-export const StatusOpcoesBoolean = [
-  { label: 'Inativo', value: false },
-  { label: 'Ativo', value: true },
-  { label: 'Todos', value: null }
-];
-
 export const SearchOptions = [
   { label: 'Exato', value: 'exact' },
   { label: 'Contém', value: 'contains' },
   { label: 'Começa com', value: 'startsWith' },
   { label: 'Termina com', value: 'endsWith' }
 ];
+
+export const StatusOpcoesBoolean = [
+  { label: 'Inativo', value: false },
+  { label: 'Ativo', value: true },
+  { label: 'Todos', value: null }
+];
+
+export const TipoClienteFornecedor = [
+  { label: 'Cliente', value: 1 },
+  { label: 'Fornecedor', value: 2 },
+  { label: 'Cliente/Fornecedor', value: 3 },
+  { label: 'Todos', value: null }
+] as const;
+
+export type TipoClienteFornecedorType = typeof TipoClienteFornecedor[number]['value'];

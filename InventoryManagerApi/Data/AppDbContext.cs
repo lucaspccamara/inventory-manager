@@ -7,6 +7,7 @@ namespace InventoryManagerApi.Data
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+        public DbSet<ClienteFornecedor> ClientesFornecedores { get; set; }
         public DbSet<Produto> Produtos { get; set; }
         public DbSet<UnidadeMedida> UnidadesMedida { get; set; }
         public DbSet<ProdutoUnidadeVenda> ProdutosUnidadeVenda { get; set; }

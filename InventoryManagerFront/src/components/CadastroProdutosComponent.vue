@@ -62,19 +62,20 @@
             />
             <q-input
               v-model.number="produto.quantidade"
-              label="Estoque *"
-              type="number"
+              label="Quantidade *"
               required
+              maxlength="15"
+              mask="###.###.###.###"
+              reverse-fill-mask
+              unmasked-value
               :rules="[
                 val => val !== '' || 'Campo obrigatório',
                 val => val >= 0 || 'Valor deve ser maior ou igual a zero'
               ]"
               :disable="!produto.menorUnidade"
               :readonly="produto.id !== null && !quantidadeEditavel"
-              class="col"
               @dblclick="habilitarEdicaoQuantidade"
-              @input="validarQuantidade"
-              @wheel.prevent
+              class="col"
             >
               <q-tooltip class="bg-amber text-black text-body2" v-if="produto.id !== null && !quantidadeEditavel">
                 Para editar, clique duas vezes no campo.
@@ -174,7 +175,7 @@
 
         <div class="col-12">
           <q-list bordered separator v-if="produto.unidadeCompra && produto.menorUnidade">
-            <q-item-label header><strong>Estoque por Unidade de Venda</strong></q-item-label>
+            <q-item-label header><strong>Quantidade por Unidade de Venda</strong></q-item-label>
             <q-item v-for="(info, index) in informacoesQuantidades" :key="index">
               <div class="row full-width items-center">
                 <span>{{ info.unidade }}: {{ info.quantidade }}</span>
@@ -282,12 +283,6 @@ const unidadeEmEdicao = computed(() => {
 const habilitarEdicaoQuantidade = () => {
   if (produto.value.id !== null) {
     quantidadeEditavel.value = true;
-  }
-};
-
-const validarQuantidade = () => {
-  if (produto.value.quantidade < 0 || isNaN(produto.value.quantidade)) {
-    produto.value.quantidade = 0; // Corrige para 0 se o valor for negativo ou inválido
   }
 };
 

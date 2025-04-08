@@ -1,19 +1,16 @@
-using InventoryManagerApi.Data;
 using InventoryManagerApi.Dtos;
-using InventoryManagerApi.Models;
 using InventoryManagerApi.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace InventoryManagerApi.Controllers
 {
     [ApiController]
     [Route("api/produtos")]
-    public class ProdutosController : ControllerBase
+    public class ProdutoController : ControllerBase
     {
         private readonly ProdutoService _service;
 
-        public ProdutosController(ProdutoService service)
+        public ProdutoController(ProdutoService service)
         {
             _service = service;
         }
@@ -40,7 +37,7 @@ namespace InventoryManagerApi.Controllers
                 return BadRequest(ModelState);
 
             var id = await _service.AdicionarAsync(produtoCreateDto);
-            return CreatedAtAction(nameof(GetProduto), new { id = id }, new { id = id });
+            return CreatedAtAction(nameof(GetProduto), new { id }, new { id });
         }
 
         [HttpPut("{id}")]
