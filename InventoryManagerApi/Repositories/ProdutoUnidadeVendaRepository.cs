@@ -28,6 +28,7 @@ namespace InventoryManagerApi.Repositories
             return await _context.ProdutosUnidadeVenda
                 .Include(u => u.UnidadeMedida)
                 .Where(puv => puv.ProdutoId == produtoId)
+                .Where(puv => puv.Status)
                 .ToListAsync();
         }
 
@@ -47,7 +48,7 @@ namespace InventoryManagerApi.Repositories
             var produtoUnidadeVenda = await _context.ProdutosUnidadeVenda.FindAsync(id);
             if (produtoUnidadeVenda != null)
             {
-                _context.ProdutosUnidadeVenda.Remove(produtoUnidadeVenda);
+                produtoUnidadeVenda.Status = false;
                 await _context.SaveChangesAsync();
             }
         }

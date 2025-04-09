@@ -13,23 +13,23 @@
         <div class="col-12">
           <q-input
             v-model="unidade.nome"
-            label="Nome"
+            label="Nome *"
             required
-            :rules="[
-              val => val.length >= 2 || 'O número mínimo de caracteres é 2',
-              val => val.length <= 25 || 'O número máximo de caracteres é 25'
-            ]"
+            bottom-slots
+            counter
+            maxlength="25"
+            :rules="[ val => val && val.length > 0 || 'Campo obrigatório' ]"
           />
         </div>
         <div class="col-12">
           <q-input
             v-model="unidade.sigla"
-            label="Sigla"
+            label="Sigla *"
             required
-            :rules="[
-              val => val.length >= 1 || 'O número mínimo de caracteres é 1',
-              val => val.length <= 10 || 'O número máximo de caracteres é 10'
-            ]"
+            bottom-slots
+            counter
+            maxlength="10"
+            :rules="[ val => val && val.length > 0 || 'Campo obrigatório' ]"
           />
         </div>
         

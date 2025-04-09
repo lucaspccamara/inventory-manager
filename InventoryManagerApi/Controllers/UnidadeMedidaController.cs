@@ -38,24 +38,17 @@ namespace InventoryManagerApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var unidade = new UnidadeMedida
-            {
-                Nome = unidadeDto.Nome,
-                Sigla = unidadeDto.Sigla,
-                Status = unidadeDto.Status
-            };
-
-            await _service.AdicionarAsync(unidade);
-            return CreatedAtAction(nameof(GetUnidade), new { id = unidade.Id }, new { id = unidade.Id });
+            var id = await _service.AdicionarAsync(unidadeDto);
+            return CreatedAtAction(nameof(GetUnidade), new { id }, new { id });
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUnidade(int id, [FromBody] UnidadeMedida unidade)
+        public async Task<IActionResult> PutUnidade(int id, [FromBody] UnidadeMedidaDto unidadeDto)
         {
-            if (id != unidade.Id)
+            if (id != unidadeDto.Id)
                 return BadRequest("ID da URL não corresponde ao ID da entidade.");
 
-            await _service.AtualizarAsync(unidade);
+            await _service.AtualizarAsync(unidadeDto);
             return NoContent();
         }
 

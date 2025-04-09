@@ -4,7 +4,6 @@ namespace InventoryManagerApi.Dtos
 {
     public class ClienteFornecedorFilter
     {
-        public int? Id { get; set; }
         public string? Nome { get; set; }
         public string? CpfCnpj { get; set; }
         public ETipoClienteFornecedor? Tipo { get; set; }

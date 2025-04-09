@@ -23,13 +23,29 @@ namespace InventoryManagerApi.Services
             return await _repository.GetByIdAsync(id);
         }
 
-        public async Task AdicionarAsync(UnidadeMedida unidade)
+        public async Task<int> AdicionarAsync(UnidadeMedidaDto unidadeDto)
         {
+            var unidade = new UnidadeMedida
+            {
+                Nome = unidadeDto.Nome,
+                Sigla = unidadeDto.Sigla,
+                Status = unidadeDto.Status
+            };
+
             await _repository.AddAsync(unidade);
+            return unidade.Id;
         }
 
-        public async Task AtualizarAsync(UnidadeMedida unidade)
+        public async Task AtualizarAsync(UnidadeMedidaDto unidadeDto)
         {
+            var unidade = new UnidadeMedida
+            {
+                Id = unidadeDto.Id.Value,
+                Nome = unidadeDto.Nome,
+                Sigla = unidadeDto.Sigla,
+                Status = unidadeDto.Status
+            };
+
             await _repository.UpdateAsync(unidade);
         }
 

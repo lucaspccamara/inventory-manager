@@ -13,7 +13,7 @@ namespace InventoryManagerApi.Services
             _repository = repository;
         }
 
-        public async Task<PagedResponse<ClienteFornecedorDto>> ListarClienteForneceforAsync(PagedRequest<ClienteFornecedorFilter> request)
+        public async Task<PagedResponse<ClienteFornecedorTableDto>> ListarClienteForneceforAsync(PagedRequest<ClienteFornecedorFilter> request)
         {
             return await _repository.GetPagedAsync(request);
         }

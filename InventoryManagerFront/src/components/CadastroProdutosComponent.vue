@@ -2,7 +2,7 @@
   <q-card padding style="width: 900px; max-width: 80vw;">
     <q-card-section>
       <q-toolbar>
-        <q-toolbar-title>Cadastro de Produtos</q-toolbar-title>
+        <q-toolbar-title>{{ props.idProduto == null ? "Cadastrar" : "Editar" }} Produto</q-toolbar-title>
         <q-space />
         <q-btn dense flat icon="close" v-close-popup>
           <q-tooltip>Fechar</q-tooltip>
@@ -16,7 +16,8 @@
             label="Nome do Produto *"
             required
             bottom-slots
-            counter maxlength="255"
+            counter
+            maxlength="255"
             :rules="[ val => val && val.length > 0 || 'Campo obrigatório' ]"
           />
         </div>
@@ -62,16 +63,11 @@
             />
             <q-input
               v-model.number="produto.quantidade"
+              type="number"
               label="Quantidade *"
               required
-              maxlength="15"
-              mask="###.###.###.###"
-              reverse-fill-mask
-              unmasked-value
-              :rules="[
-                val => val !== '' || 'Campo obrigatório',
-                val => val >= 0 || 'Valor deve ser maior ou igual a zero'
-              ]"
+              :input-style="{ color: produto.quantidade < 0 ? 'red' : '' }"
+              :rules="[ val => val !== '' || 'Campo obrigatório' ]"
               :disable="!produto.menorUnidade"
               :readonly="produto.id !== null && !quantidadeEditavel"
               @dblclick="habilitarEdicaoQuantidade"
@@ -156,7 +152,7 @@
                     color="red"
                     dense
                     flat
-                    @click="removerUnidade(index)"
+                    @click="restaurarValoresOriginais(index)"
                   />
                   <q-btn
                     v-if="!unidade.editing"
@@ -178,7 +174,7 @@
             <q-item-label header><strong>Quantidade por Unidade de Venda</strong></q-item-label>
             <q-item v-for="(info, index) in informacoesQuantidades" :key="index">
               <div class="row full-width items-center">
-                <span>{{ info.unidade }}: {{ info.quantidade }}</span>
+                <span>{{ info.unidade }}: <span :class="{ 'text-negative': produto.quantidade < 0 }">{{ formatarQuantidade(info.quantidade) }}</span></span>
               </div>
             </q-item>
           </q-list>
@@ -266,7 +262,8 @@ const editingUnidadeConversao = ref<UnidadeConversao>({
     status: true
   },
   fator: 1 ,
-  precoPadrao: 0
+  precoPadrao: 0,
+  original: null,
 });
 
 const opcoesUnidades = ref<UnidadeMedida[]>([]);
@@ -294,8 +291,9 @@ const informacoesQuantidades = computed(() => {
   const unidadesOrdenadas = [...produto.value.unidadesVenda].sort((a, b) => b.fator - a.fator);
 
   for (const unidade of unidadesOrdenadas) {
-    const quantidade = Math.floor(restante / unidade.fator);
-    restante = restante % unidade.fator;
+    // Calcular a quantidade para a unidade atual
+    const quantidade = Math.trunc(restante / unidade.fator);
+    restante = restante - quantidade * unidade.fator;
 
     resultados.push({
       unidade: `${unidade.origem.nome} (${unidade.origem.sigla})`,
@@ -304,7 +302,7 @@ const informacoesQuantidades = computed(() => {
   }
 
   // Adicionar o restante na menor unidade
-  if (restante > 0) {
+  if (restante !== 0) {
     resultados.push({
       unidade: `${produto.value.menorUnidade?.nome} (${produto.value.menorUnidade?.sigla})`,
       quantidade: restante
@@ -314,6 +312,10 @@ const informacoesQuantidades = computed(() => {
   return resultados;
 });
 
+const formatarQuantidade = (quantidade: number): string => {
+  return quantidade.toLocaleString('pt-BR');
+};
+
 const salvarEditarUnidade = (unidade: UnidadeConversao) => {
   if (unidade.origem.id == 0) {
     Notify.create({
@@ -321,6 +323,18 @@ const salvarEditarUnidade = (unidade: UnidadeConversao) => {
       color: 'negative'
     });
     return;
+  }
+
+  if (!unidade.editing) {
+    // Salvar os valores originais antes de habilitar a edição
+    unidade.original = {
+      id: unidade.id,
+      origem: { ...unidade.origem },
+      destino: { ...unidade.destino },
+      fator: unidade.fator,
+      precoPadrao: unidade.precoPadrao,
+      original: null
+    };
   }
   
   unidade.editing = !unidade.editing;
@@ -345,7 +359,8 @@ const adicionarUnidade = () => {
     },
     fator: editingUnidadeConversao.value.fator,
     precoPadrao: editingUnidadeConversao.value.precoPadrao,
-    editing: true
+    editing: true,
+    original: null // Inicializar como null, pois não há valores originais ainda
   };
 
   adicionarOuAtualizarUnidade(novaUnidade);
@@ -357,7 +372,8 @@ const adicionarUnidade = () => {
     destino: { id: 0, nome: 'Selecione', sigla: '', status: true },
     fator: 1,
     precoPadrao: 0,
-    editing: true
+    editing: true,
+    original: null // Inicializar como null, pois não há valores originais ainda
   };
 };
 
@@ -390,7 +406,8 @@ const atualizarUnidadesVenda = () => {
       },
       fator: 1,
       precoPadrao: 0,
-      editing: true
+      editing: true,
+      original: null // Inicializar como null, pois não há valores originais ainda
     };
 
     // Unidade de Venda 2: Menor Unidade -> Menor Unidade
@@ -410,7 +427,8 @@ const atualizarUnidadesVenda = () => {
       },
       fator: 1,
       precoPadrao: 0,
-      editing: true
+      editing: true,
+      original: null // Inicializar como null, pois não há valores originais ainda
     };
 
     // Adicionar ou substituir as unidades de venda
@@ -429,18 +447,38 @@ const adicionarOuAtualizarUnidade = (novaUnidade: UnidadeConversao) => {
     // Atualizar a unidade existente
     produto.value.unidadesVenda.splice(unidadeExistenteIndex, 1, {
       ...novaUnidade,
+      original: {
+        id: produto.value.unidadesVenda[unidadeExistenteIndex]?.id ?? null,
+        origem: produto.value.unidadesVenda[unidadeExistenteIndex]?.origem ?? { id: null, nome: '', sigla: '', status: true },
+        destino: produto.value.unidadesVenda[unidadeExistenteIndex]?.destino ?? { id: null, nome: '', sigla: '', status: true },
+        fator: produto.value.unidadesVenda[unidadeExistenteIndex]?.fator ?? 1,
+        precoPadrao: produto.value.unidadesVenda[unidadeExistenteIndex]?.precoPadrao ?? 0,
+        editing: produto.value.unidadesVenda[unidadeExistenteIndex]?.editing ?? false,
+        original: produto.value.unidadesVenda[unidadeExistenteIndex]?.original ?? null
+      }, // Salvar os valores originais
       editing: true // Certifique-se de que a unidade não está em edição ao atualizar
     });
   } else {
     // Adicionar nova unidade
     produto.value.unidadesVenda.push({
       ...novaUnidade,
+      original: { ...novaUnidade }, // Salvar os valores originais
       editing: true // Inicializar como não editando
     });
   }
 
   // Ordenar as unidades de venda do maior fator para o menor
   produto.value.unidadesVenda.sort((a, b) => b.fator - a.fator);
+};
+
+const restaurarValoresOriginais = (index: number) => {
+  const unidade = produto.value.unidadesVenda[index];
+  if (unidade?.original) {
+    produto.value.unidadesVenda[index] = {
+      ...unidade.original,
+      editing: false // Sair do modo de edição
+    };
+  }
 };
 
 const onUnidadeCompraChange = (novaUnidadeCompra: UnidadeMedida) => {

@@ -20,7 +20,7 @@ namespace InventoryManagerApi.Repositories
             return _context.ClientesFornecedores.AsQueryable();
         }
 
-        public async Task<PagedResponse<ClienteFornecedorDto>> GetPagedAsync(PagedRequest<ClienteFornecedorFilter> request)
+        public async Task<PagedResponse<ClienteFornecedorTableDto>> GetPagedAsync(PagedRequest<ClienteFornecedorFilter> request)
         {
             var query = GetAll();
 
@@ -58,7 +58,7 @@ namespace InventoryManagerApi.Repositories
             var pagedData = data
                 .Skip((request.Page - 1) * request.PageSize)
                 .Take(request.PageSize)
-                .Select(cf => new ClienteFornecedorDto
+                .Select(cf => new ClienteFornecedorTableDto
                 {
                     Id = cf.Id,
                     Nome = cf.Nome,
@@ -66,12 +66,11 @@ namespace InventoryManagerApi.Repositories
                     Email = cf.Email,
                     Telefone = cf.Telefone,
                     Celular = cf.Celular,
-                    Endereco = cf.Endereco,
                     Tipo = cf.Tipo,
                     Status = cf.Status
                 }).ToList();
 
-            return new PagedResponse<ClienteFornecedorDto>
+            return new PagedResponse<ClienteFornecedorTableDto>
             {
                 Data = pagedData,
                 TotalRecords = totalRecords,

@@ -27,10 +27,10 @@
               <q-input v-model="request.filter.nome" label="Nome:" outlined dense class="col-9" />
             </q-btn-group>
           </div>
-          <div class="col-3">
+          <div class="col-2">
             <q-input v-model="request.filter.sigla" label="Sigla:" outlined dense />
           </div>
-          <div class="col">
+          <div class="col-2">
             <q-select
               v-model="request.filter.status"
               :options="StatusOpcoesBoolean"

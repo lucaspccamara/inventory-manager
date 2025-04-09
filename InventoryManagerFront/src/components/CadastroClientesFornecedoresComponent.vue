@@ -11,10 +11,18 @@
 
       <q-form @submit="salvarCadastro" class="row q-col-gutter-md">
         <div class="col-12">
-          <q-input v-model="cadastro.nome" label="Nome *" required />
+          <q-input
+            v-model="cadastro.nome"
+            label="Nome *"
+            required
+            bottom-slots
+            counter
+            maxlength="255"
+            :rules="[ val => val && val.length > 0 || 'Campo obrigatório' ]"
+          />
         </div>
 
-        <div class="col-12">
+        <div class="col-12 q-pt-none">
           <div class="row q-col-gutter-md">
             <div class="col">
               <q-input
@@ -46,11 +54,24 @@
         </div>
         
         <div class="col-12 q-pt-none">
-          <q-input v-model="cadastro.email" label="E-mail" type="email" />
+          <q-input
+            v-model="cadastro.email"
+            label="E-mail"
+            type="email"
+            bottom-slots
+            counter
+            maxlength="255"
+          />
         </div>
 
-        <div class="col-12">
-          <q-input v-model="cadastro.endereco" label="Endereço" />
+        <div class="col-12 q-pt-none">
+          <q-input
+            v-model="cadastro.endereco"
+            label="Endereço"
+            bottom-slots
+            counter
+            maxlength="500"
+          />
         </div>
 
         <div class="col-12 flex justify-between">

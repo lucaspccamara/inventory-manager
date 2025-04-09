@@ -11,6 +11,18 @@
     </div>
 
     <div class="row q-col-gutter-md q-mb-md">
+      <div class="col-1">
+        <q-input
+          v-model="request.filter.id"
+          label="Id:"
+          maxlength="15"
+          mask="###.###.###.###"
+          reverse-fill-mask
+          unmasked-value
+          outlined
+          dense
+        />
+      </div>
       <div class="col-5">
         <q-btn-group spread outline>
           <q-select
@@ -25,18 +37,6 @@
           />
           <q-input v-model="request.filter.nome" label="Nome:" outlined dense class="col-9" />
         </q-btn-group>
-      </div>
-      <div class="col-1">
-        <q-input
-          v-model="request.filter.id"
-          label="Id:"
-          maxlength="15"
-          mask="###.###.###.###"
-          reverse-fill-mask
-          unmasked-value
-          outlined
-          dense
-        />
       </div>
       <div class="col-1">
         <q-select
@@ -58,9 +58,18 @@
       :loading="loading"
       @request="atualizarPaginacao"
     >
+      <template v-slot:body-cell-nome="props">
+        <q-td :props="props">
+          <div style="display: flex;">
+            <div class="ellipsis" style="flex: 1 1 0%; max-width: 500px;" :title="props.row.nome">
+              {{ props.row.nome }}
+            </div>
+          </div>
+        </q-td>
+      </template>
       <template v-slot:body-cell-estoque="props">
         <q-td :props="props">
-          <q-badge color="primary">
+          <q-badge :color="props.row.quantidade < 0 ? 'red' : 'primary'">
             {{ formatarQuantidade(props.row.quantidade) }}
 
             <q-tooltip class="bg-amber text-body2 text-black">
@@ -138,10 +147,10 @@ const pagination = ref({
 });
 
 const colunas = [
-  { name: 'id', label: 'ID', field: 'id', align: 'left' as const },
-  { name: 'nome', label: 'Nome', field: 'nome', align: 'left' as const },
-  { name: 'estoque', label: 'Estoque', field: 'quantidade', align: 'center' as const, style: 'width: 150px' },
-  { name: 'status', label: 'Status', field: 'status', align: 'left' as const },
+  { name: 'id', label: 'ID', field: 'id', align: 'left' as const, style: 'width: 100px' },
+  { name: 'nome', label: 'Nome', field: 'nome', align: 'left' as const, style: 'width: 500px' },
+  { name: 'estoque', label: 'Estoque', field: 'quantidade', align: 'center' as const },
+  { name: 'status', label: 'Status', field: 'status', align: 'center' as const },
   { name: 'acoes', label: 'Ações', field: 'acoes', align: 'center' as const, style: 'width: 100px' }
 ];
 

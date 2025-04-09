@@ -32,7 +32,7 @@ export interface ClienteFornecedorTableDto {
   nome: string;
   cpfCnpj: string;
   email: string;
-  telefoneCelular: string;
+  contato: string;
   tipo: TipoClienteFornecedorType;
   status: boolean;
 }
@@ -73,6 +73,7 @@ export interface UnidadeConversao {
   fator: number;
   precoPadrao: number;
   editing?: boolean;
+  original: UnidadeConversao | null;
 }
 
 export interface UnidadeConversaoCreateDto {

@@ -44,18 +44,6 @@
         />
       </div>
       <div class="col-1">
-        <q-input
-          v-model="request.filter.id"
-          label="Id:"
-          maxlength="15"
-          mask="###.###.###.###"
-          reverse-fill-mask
-          unmasked-value
-          outlined
-          dense
-        />
-      </div>
-      <div class="col-1">
         <q-select
           v-model="request.filter.tipo"
           :options="TipoClienteFornecedor"
@@ -83,6 +71,7 @@
       :rows="response.data"
       :columns="colunas"
       row-key="id"
+
       :loading="loading"
       @request="atualizarPaginacao"
     >
@@ -155,8 +144,8 @@ const dialogCriarClienteFornecedor = ref(false);
 const idClienteFornecedorParaDelecao = ref<number | null>(null);
 const dialogConfirmarDelecao = ref(false);
 
-const request = ref<ApiRequest<{ id?: number | null; nome?: string; cpfCnpj?: string; tipo?: TipoClienteFornecedorType | null; status?: boolean, searchType: string }>>({
-  filter: { id: null, nome: '', cpfCnpj: '', tipo: TipoClienteFornecedor[3].value, status: true, searchType: 'contains' },
+const request = ref<ApiRequest<{ nome?: string; cpfCnpj?: string; tipo?: TipoClienteFornecedorType | null; status?: boolean, searchType: string }>>({
+  filter: { nome: '', cpfCnpj: '', tipo: TipoClienteFornecedor[3].value, status: true, searchType: 'contains' },
   page: 1,
   pageSize: 10,
   sortBy: 'nome',
@@ -182,10 +171,10 @@ const pagination = ref({
 const colunas = [
   { name: 'nome', label: 'Nome', field: 'nome', align: 'left' as const },
   { name: 'cpfCnpj', label: 'CPF/CNPJ', field: 'cpfCnpj', align: 'left' as const },
-  { name: 'telefone', label: 'Telefone', field: 'telefone', align: 'left' as const },
+  { name: 'contato', label: 'Telefone/Celular', field: 'contato', align: 'left' as const },
   { name: 'email', label: 'E-mail', field: 'email', align: 'left' as const },
   { name: 'tipo', label: 'Tipo', field: 'tipo', align: 'left' as const },
-  { name: 'status', label: 'Status', field: 'status', align: 'left' as const },
+  { name: 'status', label: 'Status', field: 'status', align: 'center' as const },
   { name: 'acoes', label: 'Ações', field: 'acoes', align: 'center' as const, style: 'width: 100px' }
 ];
 
@@ -255,14 +244,6 @@ const deletarClienteFornecedor = async (isConfirmado: boolean) => {
 watch(() => request.value.filter, () => {
   request.value.page = 1;
 }, { deep: true });
-
-watch(() => request.value.filter.id, (newValue) => {
-  if (newValue) {
-    request.value.filter.id = newValue;
-  } else {
-    request.value.filter.id = null;
-  }
-}, { immediate: true });
 
 buscarClientesFornecedores();
 </script>
