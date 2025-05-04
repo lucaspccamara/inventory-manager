@@ -13,6 +13,7 @@ namespace InventoryManagerApi.Data
         public DbSet<ProdutoUnidadeVenda> ProdutosUnidadeVenda { get; set; }
         public DbSet<Pedido> Pedidos { get; set; }
         public DbSet<ItemPedido> ItensPedido { get; set; }
+        public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -55,6 +56,26 @@ namespace InventoryManagerApi.Data
                 .HasOne(i => i.Produto)
                 .WithMany()
                 .HasForeignKey(i => i.ProdutoId);
+
+            modelBuilder.Entity<ItemPedido>()
+                .HasOne(i => i.ProdutoUnidadeVenda)
+                .WithMany()
+                .HasForeignKey(i => i.ProdutoUnidadeVendaId);
+
+            modelBuilder.Entity<Pedido>()
+                .HasOne(p => p.ClienteFornecedor)
+                .WithMany()
+                .HasForeignKey(p => p.ClienteFornecedorId);
+
+            modelBuilder.Entity<MovimentacaoEstoque>()
+                .HasOne(m => m.Produto)
+                .WithMany()
+                .HasForeignKey(m => m.ProdutoId);
+
+            modelBuilder.Entity<MovimentacaoEstoque>()
+                .HasOne(m => m.Pedido)
+                .WithMany()
+                .HasForeignKey(m => m.PedidoId);
         }
     }
 }

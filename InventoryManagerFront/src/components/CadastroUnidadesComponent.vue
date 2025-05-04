@@ -14,7 +14,6 @@
           <q-input
             v-model="unidade.nome"
             label="Nome *"
-            required
             bottom-slots
             counter
             maxlength="25"
@@ -25,7 +24,6 @@
           <q-input
             v-model="unidade.sigla"
             label="Sigla *"
-            required
             bottom-slots
             counter
             maxlength="10"

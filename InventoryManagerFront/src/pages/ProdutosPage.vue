@@ -3,7 +3,7 @@
     <div class="col flex justify-between q-mb-md">
       <q-btn
         color="primary"
-        label="Adicionar Produto"
+        label="Cadastrar Produto"
         @click="cadastroProduto(null)"
       />
 
@@ -11,7 +11,7 @@
     </div>
 
     <div class="row q-col-gutter-md q-mb-md">
-      <div class="col-1">
+      <div :class="selecionavel ? 'col-2' : 'col-1'">
         <q-input
           v-model="request.filter.id"
           label="Id:"
@@ -23,7 +23,7 @@
           dense
         />
       </div>
-      <div class="col-5">
+      <div :class="selecionavel ? 'col-10' : 'col-5'">
         <q-btn-group spread outline>
           <q-select
             v-model="request.filter.searchType"
@@ -38,7 +38,7 @@
           <q-input v-model="request.filter.nome" label="Nome:" outlined dense class="col-9" />
         </q-btn-group>
       </div>
-      <div class="col-1">
+      <div v-if="!selecionavel" class="col-1">
         <q-select
           v-model="request.filter.status"
           :options="StatusOpcoesBoolean"
@@ -87,8 +87,18 @@
       </template>
       <template v-slot:body-cell-acoes="props">
         <q-td :props="props">
-          <q-btn flat round icon="edit" @click="editarProduto(props.row.id)" />
-          <q-btn flat round icon="delete" color="red" @click="confirmarDelecao(props.row.id)" :disable="!props.row.status" />
+          <q-btn
+            v-if="selecionavel"
+            flat
+            round
+            icon="check"
+            color="primary"
+            @click="selecionarProduto(props.row.id)"
+          />
+          <template v-else>
+            <q-btn flat round icon="edit" @click="editarProduto(props.row.id)" />
+            <q-btn flat round icon="delete" color="red" @click="confirmarDelecao(props.row.id)" :disable="!props.row.status" />
+          </template>
         </q-td>
       </template>
     </q-table>
@@ -113,9 +123,40 @@
 import { ref, watch } from 'vue';
 import { Notify } from 'quasar';
 import { api } from '../boot/axios';
-import { ProdutoTableDto, StatusOpcoesBoolean, SearchOptions, ApiRequest, ApiResponse } from '../components/models';
+import { Produto, ProdutoTableDto, StatusOpcoesBoolean, SearchOptions, ApiRequest, ApiResponse } from '../components/models';
 import CadastroProdutos from '../components/CadastroProdutosComponent.vue';
 import ConfirmDialog from '../components/ConfirmDialogComponent.vue';
+
+const props = defineProps<{
+  selecionavel?: boolean
+}>();
+
+const emit = defineEmits(['selecionar']);
+
+const selecionarProduto = async (produtoId: number) => {
+  const produto = ref<Produto>({
+    id: null,
+    nome: '',
+    descricao: '',
+    quantidade: 0,
+    status: true,
+    unidadeCompra: null,
+    unidadesVenda: [],
+    menorUnidade: null
+  });
+
+  try {
+    const { data } = await api.get<Produto>(`/produtos/${produtoId}`);
+    produto.value = data;
+  } catch (error) {
+    Notify.create({
+      message: 'Erro ao carregar produto!',
+      color: 'negative'
+    });
+  } finally {
+    emit('selecionar', produto.value);
+  }
+}
 
 const idProduto = ref<number | null>(null);
 const dialogCriarProduto = ref(false);
@@ -126,7 +167,7 @@ const request = ref<ApiRequest<{ id?: number | null; nome?: string; status?: boo
   filter: { id: null, nome: '', status: true, searchType: 'contains' },
   page: 1,
   pageSize: 10,
-  sortBy: 'nome',
+  sortBy: 'id',
   sortDesc: false
 });
 
@@ -161,11 +202,6 @@ const formatarQuantidade = (quantidade: number): string => {
 const buscarProdutos = async () => {
   try {
     loading.value = true;
-
-    // Garantir que o campo `id` seja um número ou `null`
-    if (String(request.value.filter.id) === '') {
-      request.value.filter.id = null;
-    }
 
     const { data } = await api.post<ApiResponse<ProdutoTableDto>>('/produtos/lista', request.value);
 
@@ -230,12 +266,8 @@ watch(() => request.value.filter, () => {
 }, { deep: true });
 
 watch(() => request.value.filter.id, (newValue) => {
-  if (newValue) {
-    request.value.filter.id = newValue;
-  } else {
-    request.value.filter.id = null;
-  }
-}, { immediate: true });
+  request.value.filter.id = newValue ? Number(newValue) : null;
+}, { deep: true });
 
 buscarProdutos();
 </script>

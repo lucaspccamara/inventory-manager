@@ -14,7 +14,6 @@
           <q-input
             v-model="produto.nome"
             label="Nome do Produto *"
-            required
             bottom-slots
             counter
             maxlength="255"
@@ -29,7 +28,8 @@
             type="textarea"
             autogrow
             bottom-slots
-            counter maxlength="500"
+            counter
+            maxlength="500"
           />
         </div>
 
@@ -40,7 +40,6 @@
             option-value="id"
             option-label="nome"
             label="Unidade de Compra *"
-            required
             :rules="[ val => val !== null || 'Campo obrigatório' ]"
             @scroll="handleScroll"
             @update:model-value="onUnidadeCompraChange"
@@ -55,7 +54,6 @@
               option-value="id"
               option-label="nome"
               label="Menor Unidade de Venda *"
-              required
               :rules="[ val => val !== null || 'Campo obrigatório' ]"
               @scroll="handleScroll"
               @update:model-value="onMenorUnidadeChange"
@@ -65,7 +63,6 @@
               v-model.number="produto.quantidade"
               type="number"
               label="Quantidade *"
-              required
               :input-style="{ color: produto.quantidade < 0 ? 'red' : '' }"
               :rules="[ val => val !== '' || 'Campo obrigatório' ]"
               :disable="!produto.menorUnidade"
@@ -207,7 +204,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { api } from 'src/boot/axios';
 import { Notify } from 'quasar';
-import type { Produto, ProdutoCreateDto, UnidadeMedida, UnidadeConversao, ApiRequest, ApiResponse } from './models';
+import { Produto, ProdutoCreateDto, UnidadeMedida, UnidadeConversao, ApiRequest, ApiResponse } from './models';
 import ConfirmDialog from './ConfirmDialogComponent.vue';
 import CurrencyInput from './CurrencyInput.vue';
 
@@ -644,13 +641,3 @@ onMounted(() => {
   }
 });
 </script>
-
-<style lang="scss" scoped>
-.input-size-content{
-  width: fit-content;
-} 
-
-.unidade-select {
-  padding-bottom: 0 !important;
-}
-</style>

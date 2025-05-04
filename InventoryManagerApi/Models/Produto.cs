@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using InventoryManagerApi.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InventoryManagerApi.Models
@@ -27,5 +28,17 @@ namespace InventoryManagerApi.Models
 
         // Relacionamento com ProdutoUnidadeVenda
         public virtual ICollection<ProdutoUnidadeVenda> UnidadesVenda { get; set; } = new List<ProdutoUnidadeVenda>();
+
+        public void AtualizarEstoque(int quantidade, ETipoMovimentacao tipo)
+        {
+            if (tipo == ETipoMovimentacao.Entrada)
+            {
+                Quantidade += quantidade;
+            }
+            else if (tipo == ETipoMovimentacao.Saida)
+            {
+                Quantidade -= quantidade;
+            }
+        }
     }
 }

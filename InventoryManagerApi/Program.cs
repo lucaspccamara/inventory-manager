@@ -2,6 +2,7 @@ using InventoryManagerApi.Data;
 using InventoryManagerApi.Repositories;
 using InventoryManagerApi.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,10 +13,16 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Registro dos serviços e repositórios
 builder.Services.AddScoped<ClienteFornecedorService>();
+builder.Services.AddScoped<ItemPedidoService>();
+builder.Services.AddScoped<MovimentacaoEstoqueService>();
+builder.Services.AddScoped<PedidoService>();
 builder.Services.AddScoped<ProdutoService>();
 builder.Services.AddScoped<UnidadeMedidaService>();
 
 builder.Services.AddScoped<ClienteFornecedorRepository>();
+builder.Services.AddScoped<ItemPedidoRepository>();
+builder.Services.AddScoped<MovimentacaoEstoqueRepository>();
+builder.Services.AddScoped<PedidoRepository>();
 builder.Services.AddScoped<ProdutoRepository>();
 builder.Services.AddScoped<ProdutoUnidadeVendaRepository>();
 builder.Services.AddScoped<UnidadeMedidaRepository>();

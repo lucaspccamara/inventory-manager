@@ -1,7 +1,6 @@
 ﻿using InventoryManagerApi.Data;
 using InventoryManagerApi.Dtos;
 using InventoryManagerApi.Models;
-using InventoryManagerApi.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventoryManagerApi.Repositories
@@ -24,6 +23,18 @@ namespace InventoryManagerApi.Repositories
         {
             var query = GetAll();
 
+            if (!string.IsNullOrEmpty(request.Filter.Nome))
+            {
+                if (request.Filter.SearchType == "contains")
+                    query = query.Where(cf => cf.Nome.ToLower().Contains(request.Filter.Nome.ToLower()));
+                else if (request.Filter.SearchType == "startsWith")
+                    query = query.Where(cf => cf.Nome.ToLower().StartsWith(request.Filter.Nome.ToLower()));
+                else if (request.Filter.SearchType == "endsWith")
+                    query = query.Where(cf => cf.Nome.ToLower().EndsWith(request.Filter.Nome.ToLower()));
+                else if (request.Filter.SearchType == "equals")
+                    query = query.Where(cf => cf.Nome.ToLower().Equals(request.Filter.Nome.ToLower()));
+            }
+
             if (request.Filter.Status.HasValue)
             {
                 query = query.Where(u => u.Status == request.Filter.Status.Value);
@@ -34,18 +45,10 @@ namespace InventoryManagerApi.Repositories
                 query = query.Where(u => u.Sigla.Contains(request.Filter.Sigla));
             }
 
-            // Executa a query e trás para a memória
-            var data = await query.ToListAsync();
-
-            // Aplica a lógica de tipo de busca
-            data = data
-                .Where(u => string.IsNullOrEmpty(request.Filter.Nome) || SearchUtils.ApplySearchType(u.Nome, request.Filter.Nome, request.Filter.SearchType))
-                .ToList();
-
-            int totalRecords = data.Count;
+            int totalRecords = await query.CountAsync();
             int totalPages = (int)Math.Ceiling((double)totalRecords / request.PageSize);
 
-            var pagedData = data
+            var pagedData = await query
                 .Skip((request.Page - 1) * request.PageSize)
                 .Take(request.PageSize)
                 .Select(u => new UnidadeMedidaDto
@@ -55,7 +58,7 @@ namespace InventoryManagerApi.Repositories
                     Sigla = u.Sigla,
                     Status = u.Status
                 })
-                .ToList();
+                .ToListAsync();
 
             return new PagedResponse<UnidadeMedidaDto>
             {

@@ -13,9 +13,14 @@ namespace InventoryManagerApi.Services
             _repository = repository;
         }
 
-        public async Task<PagedResponse<ClienteFornecedorTableDto>> ListarClienteForneceforAsync(PagedRequest<ClienteFornecedorFilter> request)
+        public async Task<PagedResponse<ClienteFornecedorTableDto>> ListarClienteFornecedorAsync(PagedRequest<ClienteFornecedorFilter> request)
         {
             return await _repository.GetPagedAsync(request);
+        }
+
+        public async Task<PagedResponse<ClienteFornecedorSelectDto>> ListarClienteFornecedorSelectAsync(PagedRequest<ClienteFornecedorFilter> request)
+        {
+            return await _repository.GetPagedToSelectAsync(request);
         }
 
         public async Task<ClienteFornecedorDto?> ObterPorIdAsync(int id)

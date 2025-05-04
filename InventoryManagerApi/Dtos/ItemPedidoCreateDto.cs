@@ -1,14 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
-namespace InventoryManagerApi.Models
+namespace InventoryManagerApi.Dtos
 {
-    public class ItemPedido
+    public class ItemPedidoCreateDto
     {
-        public int Id { get; set; }
+        public int? Id { get; set; }
 
-        [Required]
-        public int PedidoId { get; set; }
+        public int? PedidoId { get; set; }
 
         [Required]
         public int ProdutoId { get; set; }
@@ -26,10 +25,5 @@ namespace InventoryManagerApi.Models
         [Required]
         [Column(TypeName = "decimal(18,2)")]
         public decimal PrecoUnitario { get; set; }
-
-        // Relacionamento com Pedido, Produto e ProdutoUnidadeVenda
-        public virtual Pedido Pedido { get; set; }
-        public virtual Produto Produto { get; set; }
-        public virtual ProdutoUnidadeVenda ProdutoUnidadeVenda { get; set; }
     }
 }

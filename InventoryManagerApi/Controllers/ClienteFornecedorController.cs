@@ -19,7 +19,14 @@ namespace InventoryManagerApi.Controllers
         [HttpPost("lista")]
         public async Task<IActionResult> GetClientesFornecedores([FromBody] PagedRequest<ClienteFornecedorFilter> request)
         {
-            var response = await _service.ListarClienteForneceforAsync(request);
+            var response = await _service.ListarClienteFornecedorAsync(request);
+            return Ok(response);
+        }
+
+        [HttpPost("busca")]
+        public async Task<IActionResult> GetClientesFornecedoresSelect([FromBody] PagedRequest<ClienteFornecedorFilter> request)
+        {
+            var response = await _service.ListarClienteFornecedorSelectAsync(request);
             return Ok(response);
         }
 

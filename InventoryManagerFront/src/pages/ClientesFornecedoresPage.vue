@@ -3,7 +3,7 @@
     <div class="col flex justify-between q-mb-md">
       <q-btn
         color="primary"
-        label="Adicionar Cliente/Fornecedor"
+        label="Cadastrar Cliente/Fornecedor"
         @click="novoClienteFornecedor"
       />
   
@@ -182,7 +182,6 @@ const buscarClientesFornecedores = async () => {
   try {
     loading.value = true;
 
-    console.log('request.value', request.value);
     const { data } = await api.post('/clientes/lista', request.value);
 
     response.value = data;

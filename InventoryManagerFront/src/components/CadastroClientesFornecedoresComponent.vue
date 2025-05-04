@@ -14,7 +14,6 @@
           <q-input
             v-model="cadastro.nome"
             label="Nome *"
-            required
             bottom-slots
             counter
             maxlength="255"
@@ -28,7 +27,6 @@
               <q-input
                 v-model="cadastro.cpfCnpj"
                 label="CPF/CNPJ *"
-                required
                 :mask="cpfCnpjMask"
                 :rules="[val => validarCpfCnpj(val)]"
                 lazy-rules
@@ -157,8 +155,7 @@ const salvarCadastro = async () => {
     Notify.create({
       message: "É necessário marcar ao menos 'Cliente' ou 'Fornecedor'.",
       color: 'warning',
-      textColor: 'black',
-      position: 'center'
+      textColor: 'black'
     });
     return;
   }

@@ -5,7 +5,7 @@
         <div class="col flex justify-between q-mb-md">
           <q-btn
             color="primary"
-            label="Adicionar Unidade"
+            label="Cadastrar Unidade"
             @click="cadastroUnidade(null)"
           />
           <q-btn label="Buscar" @click="buscarUnidades" color="primary" />

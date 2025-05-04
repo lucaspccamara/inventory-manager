@@ -4,8 +4,6 @@
     ref="currencyInputRef"
     v-model="formattedValue"
     dense
-    rounded
-    outlined
     :label="label"
     :disable="disable"
     :error="error"
@@ -15,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { watchEffect } from 'vue';
+import { watch } from 'vue';
 import { useCurrencyInput } from 'vue-currency-input';
 
 // Definição das props
@@ -58,7 +56,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'blur']);
 
 // Configuração do `useCurrencyInput`
-const { inputRef: currencyInputRef, numberValue, formattedValue } = useCurrencyInput({
+const { inputRef: currencyInputRef, numberValue, formattedValue, setValue } = useCurrencyInput({
   currency: props.currency,
   locale: props.locale,
   precision: props.precision,
@@ -69,16 +67,16 @@ const { inputRef: currencyInputRef, numberValue, formattedValue } = useCurrencyI
 });
 
 // Sincroniza o valor inicial com o formato correto
-watchEffect(() => {
-  if (numberValue.value !== props.modelValue) {
-    numberValue.value = props.modelValue;
+watch(() => props.modelValue, (newVal) => {
+  if (newVal !== numberValue.value) {
+    setValue(newVal); // Atualiza o valor interno e o formatado!
   }
 });
 
 // Emite a atualização do modelValue enquanto o usuário digita
-watchEffect(() => {
-  emit('update:modelValue', numberValue.value || 0);
-});
+watch(numberValue, (val) => {
+  emit('update:modelValue', val ?? 0)
+})
 
 // Emite o evento de blur para o componente pai
 const onBlur = () => {

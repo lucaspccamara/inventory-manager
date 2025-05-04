@@ -1,7 +1,6 @@
 ﻿using InventoryManagerApi.Data;
 using InventoryManagerApi.Dtos;
 using InventoryManagerApi.Models;
-using InventoryManagerApi.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventoryManagerApi.Repositories
@@ -26,7 +25,14 @@ namespace InventoryManagerApi.Repositories
 
             if (!string.IsNullOrEmpty(request.Filter.Nome))
             {
-                query = query.Where(cf => cf.Nome.Contains(request.Filter.Nome));
+                if (request.Filter.SearchType == "contains")
+                    query = query.Where(cf => cf.Nome.ToLower().Contains(request.Filter.Nome.ToLower()));
+                else if (request.Filter.SearchType == "startsWith")
+                    query = query.Where(cf => cf.Nome.ToLower().StartsWith(request.Filter.Nome.ToLower()));
+                else if (request.Filter.SearchType == "endsWith")
+                    query = query.Where(cf => cf.Nome.ToLower().EndsWith(request.Filter.Nome.ToLower()));
+                else if (request.Filter.SearchType == "equals")
+                    query = query.Where(cf => cf.Nome.ToLower().Equals(request.Filter.Nome.ToLower()));
             }
 
             if (!string.IsNullOrEmpty(request.Filter.CpfCnpj))
@@ -36,7 +42,7 @@ namespace InventoryManagerApi.Repositories
 
             if (request.Filter.Tipo.HasValue)
             {
-                query = query.Where(cf => cf.Tipo == request.Filter.Tipo.Value);
+                query = query.Where(cf => cf.Tipo == request.Filter.Tipo);
             }
 
             if (request.Filter.Status.HasValue)
@@ -44,18 +50,10 @@ namespace InventoryManagerApi.Repositories
                 query = query.Where(cf => cf.Status == request.Filter.Status.Value);
             }
 
-            // Executa a query e trás para a memória
-            var data = await query.ToListAsync();
-
-            // Aplica a lógica de tipo de busca
-            data = data
-                .Where(u => string.IsNullOrEmpty(request.Filter.Nome) || SearchUtils.ApplySearchType(u.Nome, request.Filter.Nome, request.Filter.SearchType))
-                .ToList();
-
-            int totalRecords = data.Count();
+            int totalRecords = await query.CountAsync();
             int totalPages = (int)Math.Ceiling((double)totalRecords / request.PageSize);
 
-            var pagedData = data
+            var data = await query
                 .Skip((request.Page - 1) * request.PageSize)
                 .Take(request.PageSize)
                 .Select(cf => new ClienteFornecedorTableDto
@@ -68,11 +66,79 @@ namespace InventoryManagerApi.Repositories
                     Celular = cf.Celular,
                     Tipo = cf.Tipo,
                     Status = cf.Status
-                }).ToList();
+                }).ToListAsync();
 
             return new PagedResponse<ClienteFornecedorTableDto>
             {
-                Data = pagedData,
+                Data = data,
+                TotalRecords = totalRecords,
+                Page = request.Page,
+                PageSize = request.PageSize,
+                TotalPages = totalPages
+            };
+        }
+
+        public async Task<PagedResponse<ClienteFornecedorSelectDto>> GetPagedToSelectAsync(PagedRequest<ClienteFornecedorFilter> request)
+        {
+            var query = GetAll();
+
+            if (request.Filter.Id.HasValue)
+            {
+                query = query.Where(cf => cf.Id == request.Filter.Id.Value);
+            }
+
+            if (!string.IsNullOrEmpty(request.Filter.Nome))
+            {
+                if (request.Filter.SearchType == "contains")
+                    query = query.Where(cf => cf.Nome.ToLower().Contains(request.Filter.Nome.ToLower()));
+                else if (request.Filter.SearchType == "startsWith")
+                    query = query.Where(cf => cf.Nome.ToLower().StartsWith(request.Filter.Nome.ToLower()));
+                else if (request.Filter.SearchType == "endsWith")
+                    query = query.Where(cf => cf.Nome.ToLower().EndsWith(request.Filter.Nome.ToLower()));
+                else if (request.Filter.SearchType == "equals")
+                    query = query.Where(cf => cf.Nome.ToLower().Equals(request.Filter.Nome.ToLower()));
+            }
+
+            if (!string.IsNullOrEmpty(request.Filter.CpfCnpj))
+            {
+                query = query.Where(cf => cf.CpfCnpj.Contains(request.Filter.CpfCnpj));
+            }
+
+            if (!string.IsNullOrEmpty(request.Filter.Email))
+            {
+                query = query.Where(cf => cf.Email.ToLower().Contains(request.Filter.Email.ToLower()));
+            }
+
+            if (!string.IsNullOrEmpty(request.Filter.TelefoneCelular))
+            {
+                query = query.Where(cf => cf.Telefone.Contains(request.Filter.TelefoneCelular) && cf.Celular.Contains(request.Filter.TelefoneCelular));
+            }
+
+            if (request.Filter.ListaTipos.Any())
+            {
+                query = query.Where(cf => request.Filter.ListaTipos.Contains(cf.Tipo));
+            }
+
+            if (request.Filter.Status.HasValue)
+            {
+                query = query.Where(cf => cf.Status == request.Filter.Status.Value);
+            }
+
+            int totalRecords = await query.CountAsync();
+            int totalPages = (int)Math.Ceiling((double)totalRecords / request.PageSize);
+
+            var data = await query
+                .Skip((request.Page - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .Select(cf => new ClienteFornecedorSelectDto
+                {
+                    Id = cf.Id,
+                    Nome = cf.Nome
+                }).ToListAsync();
+
+            return new PagedResponse<ClienteFornecedorSelectDto>
+            {
+                Data = data,
                 TotalRecords = totalRecords,
                 Page = request.Page,
                 PageSize = request.PageSize,

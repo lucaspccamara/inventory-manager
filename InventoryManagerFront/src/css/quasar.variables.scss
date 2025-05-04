@@ -13,7 +13,7 @@
 // Tip: Use the "Theme Builder" on Quasar's documentation website.
 
 $primary   : #1976D2;
-$secondary : #26A69A;
+$secondary : #4bb359;
 $accent    : #9C27B0;
 
 $dark      : #1D1D1D;
@@ -22,7 +22,34 @@ $dark-page : #121212;
 $positive  : #21BA45;
 $negative  : #C10015;
 $info      : #31CCEC;
-$warning   : #F2C037;
+$warning   : #e9be4a;
+
+// Status Pedido Colors
+$yellow-1    : #FFE0B2;
+$yellow-2    : #FFF8E1;
+$green-1     : #C8E6C9;
+$green-2     : #E8F5E9;
+$blue-1      : #BBDEFB;
+$blue-2      : #E3F2FD;
+
+.bg-yellow-1 {
+  background-color: $yellow-1 !important;
+}
+.bg-yellow-2 {
+  background-color: $yellow-2 !important;
+}
+.bg-green-1 {
+  background-color: $green-1 !important;
+}
+.bg-green-2 {
+  background-color: $green-2 !important;
+}
+.bg-blue-1 {
+  background-color: $blue-1 !important;
+}
+.bg-blue-2 {
+  background-color: $blue-2 !important;
+}
 
 .q-toolbar__title {
   flex-grow: 2;
@@ -30,4 +57,16 @@ $warning   : #F2C037;
 
 .text-negative {
   color: red !important;
+}
+
+.input-size-content{
+  width: fit-content;
+} 
+
+.unidade-select {
+  padding-bottom: 0 !important;
+}
+
+.justify-self-end {
+  justify-self: end !important;
 }
