@@ -5,7 +5,7 @@
         <q-btn
           :color="props.tipoMovimentacao == 'entrada' ? 'primary' : 'secondary'"
           :label="props.tipoMovimentacao == 'entrada' ? 'Registrar Compra' : 'Registrar Venda'"
-          @click="cadastroCompra(null)"
+          @click="cadastroPedido(null)"
           class="q-mr-md"
         />
   
@@ -13,6 +13,7 @@
           v-if="props.tipoMovimentacao == 'saida'"
           color="warning"
           label="Gerar Orçamento"
+          @click="cadastroPedido(null, true)"
         />
       </div>
       <div class="col text-right">
@@ -103,7 +104,7 @@
             flat
             round
             icon="edit"
-            @click="editarCompra(props.row.id)"
+            @click="editarPedido(props.row.id)"
           />
           <!-- <q-btn
             color="negative"
@@ -117,7 +118,7 @@
     <q-dialog v-model="dialogCadastroPedido" persistent class="lg-dialog">
       <CadastroPedidos
         :idPedido="idPedido"
-        :tipoMovimentacao="props.tipoMovimentacao"
+        :tipoMovimentacao="cadastroPedidoTipo"
         @atualizarLista="buscarPedidos"
         @fecharDialog="dialogCadastroPedido = false"
       />
@@ -155,6 +156,7 @@ const props = defineProps<{ tipoMovimentacao: 'entrada' | 'saida' }>();
 
 const idPedido = ref<number | null>(null);
 const dialogCadastroPedido = ref(false);
+const cadastroPedidoTipo = ref<'entrada' | 'saida' | 'orcamento'>('entrada');
 const idPedidoParaDelecao = ref<number | null>(null);
 const dialogConfirmarDelecao = ref(false);
 
@@ -239,13 +241,19 @@ const atualizarPaginacao = (props: { pagination: any }) => {
   buscarPedidos();
 };
 
-const cadastroCompra = (id: number | null) => {
+const cadastroPedido = (id: number | null, isOrcamento: boolean = false) => {
+  if (isOrcamento) {
+    cadastroPedidoTipo.value = 'orcamento';
+  } else {
+    cadastroPedidoTipo.value = props.tipoMovimentacao;
+  }
+
   idPedido.value = id;
   dialogCadastroPedido.value = true;
 }
 
-const editarCompra = (id: number) => {
-  cadastroCompra(id);
+const editarPedido = (id: number, isOrcamento: boolean = false) => {
+  cadastroPedido(id, isOrcamento);
 };
 
 const deletarPedido = async (isConfirmado: boolean) => {
@@ -307,6 +315,7 @@ watch(dataFim, (newValue) => {
 
 watch(() => props.tipoMovimentacao, () => { 
   statusOpcoes.value = props.tipoMovimentacao === 'entrada' ? StatusOpcoesEntrada : StatusOpcoesSaida; // Atualiza as opções de status
+  cadastroPedidoTipo.value = props.tipoMovimentacao; // Atualiza o tipo de movimentação para o cadastro
   clienteFornecedor.value = null; 
   request.value.filter.id = null;
   request.value.filter.clienteFornecedorId = null;
