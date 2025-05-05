@@ -66,7 +66,9 @@ namespace InventoryManagerApi.Repositories
                     Celular = cf.Celular,
                     Tipo = cf.Tipo,
                     Status = cf.Status
-                }).ToListAsync();
+                })
+                .OrderBy(cf => cf.Nome)
+                .ToListAsync();
 
             return new PagedResponse<ClienteFornecedorTableDto>
             {
@@ -134,7 +136,9 @@ namespace InventoryManagerApi.Repositories
                 {
                     Id = cf.Id,
                     Nome = cf.Nome
-                }).ToListAsync();
+                })
+                .OrderBy(cf => cf.Nome)
+                .ToListAsync();
 
             return new PagedResponse<ClienteFornecedorSelectDto>
             {

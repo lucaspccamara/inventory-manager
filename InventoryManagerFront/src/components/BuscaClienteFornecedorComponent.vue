@@ -41,6 +41,7 @@
       @filter="filterFn"
       @input-value="onInputValue"
       @update:model-value="onClienteFornecedorSelect"
+      @virtual-scroll="onVirtualScroll"
       ref="clienteFornecedorSelectRef"
       class="col clienteFornecedorSelect"
       :class="{ digitando: digitando }"
@@ -95,8 +96,8 @@ const onSearchTypeChange = (val: SearchType) => {
 const request = ref<ApiRequest<{ nome?: string; cpfCnpj?: string; email?: string; telefonecelular?: string; listaTipos?: TipoClienteFornecedorType[] | null; status?: boolean, searchType: string }>>({
   filter: { nome: '', cpfCnpj: '', email: '', telefonecelular: '', listaTipos: listaTipos.value, status: true, searchType: searchType.value },
   page: 1,
-  pageSize: 10,
-  sortBy: 'nome',
+  pageSize: 15,
+  sortBy: 'Nome',
   sortDesc: false
 });
 
@@ -104,16 +105,11 @@ const response = ref<ApiResponse<ClienteFornecedorSelectDto>>({
   data: [],
   totalRecords: 0,
   page: 1,
-  pageSize: 10,
+  pageSize: 15,
   totalPages: 1
 });
 
 const loading = ref(false);
-const pagination = ref({
-  page: 1,
-  rowsPerPage: 10,
-  rowsNumber: 0
-});
 
 // Setup do campo de busca
 const clienteFornecedorVModel = ref<ClienteFornecedorSelectDto | null>(props.modelValue ?? null);
@@ -192,53 +188,59 @@ const onClienteFornecedorSelect = () => {
 };
 
 const filterFn = async (val: string, update: (val: any) => void, abort: () => void) => {
-  if (val.length <= 1) {
-    response.value.data = []
-    abort()
-    return
-  }
-  
   // Limpar os campos de filtro antes de aplicar o novo valor
   request.value.filter.nome = '';
   request.value.filter.cpfCnpj = '';
   request.value.filter.email = '';
   request.value.filter.telefonecelular = '';
 
-  setTimeout(() => {
-    update(() => {
-      const needle = val.toLowerCase();
-      
-      // Preencher o campo de acordo com o tipo de busca selecionado
-      switch (request.value.filter.searchType) {
-        case 'contains':
-        case 'startsWith':
-        case 'endsWith':
-          request.value.filter.nome = needle || '';
-          break;
-        case 'cpfCnpj':
-          request.value.filter.cpfCnpj = needle || '';
-          break;
-        case 'email':
-          request.value.filter.email = needle || '';
-          break;
-        case 'telefoneCelular':
-          request.value.filter.telefonecelular = needle || '';
-          break;
-      }
-  
-      buscarClientesFornecedores();
-    });
-  }, 500);
+  // Limpar a lista de resultados antes de aplicar o novo valor
+  response.value.data = [];
+  response.value.totalRecords = 0;
+  response.value.page = 1;
+  response.value.pageSize = 15;
+  response.value.totalPages = 1;
+
+  // Resetar a paginação para a primeira página
+  request.value.page = 1;
+
+  // Preencher o campo de acordo com o tipo de busca selecionado
+  const needle = val.toLowerCase();
+  switch (request.value.filter.searchType) {
+    case 'contains':
+    case 'startsWith':
+    case 'endsWith':
+      request.value.filter.nome = needle || '';
+      break;
+    case 'cpfCnpj':
+      request.value.filter.cpfCnpj = needle || '';
+      break;
+    case 'email':
+      request.value.filter.email = needle || '';
+      break;
+    case 'telefoneCelular':
+      request.value.filter.telefonecelular = needle || '';
+      break;
+  }
+
+  await buscarClientesFornecedores(false);
+  update(() => {});
 };
 
-const buscarClientesFornecedores = async () => {
+const buscarClientesFornecedores = async (append = false) => {
   try {
     loading.value = true;
-
     const { data } = await api.post<ApiResponse<ClienteFornecedorSelectDto>>('/clientes/busca', request.value);
 
-    response.value = data;
-    pagination.value.rowsNumber = data.totalRecords;
+    if (append) {
+      response.value.data = [...response.value.data, ...data.data];
+    } else {
+      response.value.data = data.data;
+    }
+    response.value.totalRecords = data.totalRecords;
+    response.value.page = data.page;
+    response.value.pageSize = data.pageSize;
+    response.value.totalPages = data.totalPages;
   } catch (error) {
     Notify.create({
       message: 'Erro ao carregar dados!',
@@ -249,6 +251,17 @@ const buscarClientesFornecedores = async () => {
   }
 };
 
+const onVirtualScroll = ({ index }: { index: number }) => {
+  // Se já está carregando ou não há mais páginas, não faz nada
+  if (loading.value || response.value.page * response.value.pageSize >= response.value.totalRecords) return;
+
+  // Se o usuário chegou perto do fim da lista, carrega mais
+  if (index >= response.value.data.length - 1) {
+    request.value.page++;
+    buscarClientesFornecedores(true);
+  }
+}
+
 watch(() => props.modelValue, v => clienteFornecedorVModel.value = v);
 
 watch(clienteFornecedorVModel, (v, oldVal) => {
@@ -256,10 +269,33 @@ watch(clienteFornecedorVModel, (v, oldVal) => {
 });
 
 watch(() => props.busca, () => {
-  searchType.value = SearchOptionsClienteFornecedor[2].value as SearchType; // Valor padrão para o tipo de busca
+  // Atualiza o tipo de busca padrão
+  searchType.value = SearchOptionsClienteFornecedor[2].value as SearchType;
   request.value.filter.searchType = searchType.value;
+
+  // Atualiza os tipos permitidos conforme o novo tipo de busca
+  request.value.filter.listaTipos = props.busca === 'clientes'
+    ? [TipoClienteFornecedor[0].value, TipoClienteFornecedor[2].value]
+    : [TipoClienteFornecedor[1].value, TipoClienteFornecedor[2].value];
+
+  // Limpa filtros específicos
+  request.value.filter.nome = '';
+  request.value.filter.cpfCnpj = '';
+  request.value.filter.email = '';
+  request.value.filter.telefonecelular = '';
+  request.value.filter.status = true;
+
+  // Reseta paginação
+  request.value.page = 1;
+  request.value.pageSize = 15;
+
+  // Limpa seleção e resposta
   clienteFornecedorVModel.value = null;
   response.value.data = [];
+  response.value.totalRecords = 0;
+  response.value.page = 1;
+  response.value.pageSize = 15;
+  response.value.totalPages = 1;
 });
 </script>
 
