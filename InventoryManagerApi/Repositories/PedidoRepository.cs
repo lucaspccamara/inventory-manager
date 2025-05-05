@@ -75,6 +75,7 @@ namespace InventoryManagerApi.Repositories
                     Status = p.Status,
                     Total = p.Total
                 })
+                .OrderByDescending(p => p.Id)
                 .ToListAsync();
 
             return new PagedResponse<PedidoDtoTable>
@@ -91,10 +92,8 @@ namespace InventoryManagerApi.Repositories
         {
             var pedido = await _context.Pedidos
                 .Include(p => p.ClienteFornecedor)
-                .Include(p => p.Itens)
-                .ThenInclude(i => i.Produto)
-                .Include(p => p.Itens)
-                .ThenInclude(i => i.ProdutoUnidadeVenda)
+                .Include(p => p.Itens).ThenInclude(i => i.Produto)
+                .Include(p => p.Itens).ThenInclude(i => i.ProdutoUnidadeVenda)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (pedido == null)
@@ -141,13 +140,52 @@ namespace InventoryManagerApi.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task CancelarAsync(int id)
         {
             var pedido = await _context.Pedidos.FindAsync(id);
+            var tipoMovimentacao = ETipoMovimentacao.Entrada;
+
             if (pedido != null)
             {
-                _context.Pedidos.Remove(pedido);
+                if (pedido.Status == EStatusPedido.Orçamento)
+                {
+                    pedido.Status = EStatusPedido.CanceladoOrçamento;
+                }
+                else if (pedido.Status == EStatusPedido.Venda)
+                {
+                    pedido.Status = EStatusPedido.CanceladoVenda;
+                }
+                else
+                {
+                    pedido.Status = EStatusPedido.CanceladoCompra;
+                    tipoMovimentacao = ETipoMovimentacao.Saida;
+                }
+
+                _context.Pedidos.Update(pedido);
                 await _context.SaveChangesAsync();
+
+                if (pedido.Status == EStatusPedido.CanceladoVenda || pedido.Status == EStatusPedido.CanceladoCompra)
+                {
+                    var itensPedido = await _context.ItensPedido
+                        .Where(i => i.PedidoId == pedido.Id)
+                        .ToListAsync();
+
+                    foreach (var item in itensPedido)
+                    {
+                        var movimentacao = new MovimentacaoEstoque
+                        {
+                            ProdutoId = item.ProdutoId,
+                            PedidoId = item.PedidoId,
+                            Quantidade = (int)(item.Quantidade * item.FatorConversao),
+                            Tipo = tipoMovimentacao
+                        };
+                        await _context.MovimentacoesEstoque.AddAsync(movimentacao);
+
+                        var produto = await _context.Produtos.FindAsync(item.ProdutoId);
+                        produto?.AtualizarEstoque(movimentacao.Quantidade, movimentacao.Tipo);
+                        await _context.SaveChangesAsync();
+                    }
+                }
             }
         }
     }

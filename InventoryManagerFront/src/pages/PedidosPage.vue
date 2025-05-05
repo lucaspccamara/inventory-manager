@@ -106,11 +106,14 @@
             icon="edit"
             @click="editarPedido(props.row.id)"
           />
-          <!-- <q-btn
+          <q-btn
+            flat
+            round
             color="negative"
             icon="delete"
-            @click="dialogConfirmarDelecao = true; idPedidoParaDelecao.value = props.row.id"
-          /> -->
+            @click="dialogConfirmarDelecao = true; idPedidoParaDelecao = props.row.id"
+            :disable="props.row.status === 1 || props.row.status === 3 || props.row.status === 5"
+          />
         </q-td>
       </template>
     </q-table>
@@ -126,7 +129,7 @@
 
     <ConfirmDialog
       v-model="dialogConfirmarDelecao"
-      message="Tem certeza que deseja excluir este pedido?"
+      message="Tem certeza que deseja cancelar este pedido?"
       @isConfirmado="deletarPedido"
     />
   </q-page>

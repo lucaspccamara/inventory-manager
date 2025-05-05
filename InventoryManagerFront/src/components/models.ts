@@ -199,9 +199,9 @@ export const StatusPedidoLabelColor = [
   { label: 'Orçamento', color: 'bg-yellow-1', value: 0 },                // Amarelo médio
   { label: 'Orçamento Cancelado', color: 'bg-yellow-2', value: 1 },      // Amarelo claro
   { label: 'Venda', color: 'bg-green-1', value: 2 },                    // Verde médio
-  { label: 'Venda Cancelada', color: 'bg-green-1', value: 3 },          // Verde claro
+  { label: 'Venda Cancelada', color: 'bg-green-2', value: 3 },          // Verde claro
   { label: 'Compra', color: 'bg-blue-1', value: 4 },                   // Azul médio
-  { label: 'Compra Cancelada', color: 'bg-blue-1', value: 5 }          // Azul claro
+  { label: 'Compra Cancelada', color: 'bg-blue-2', value: 5 }          // Azul claro
 ] as const;
 
 export const TipoClienteFornecedor = [

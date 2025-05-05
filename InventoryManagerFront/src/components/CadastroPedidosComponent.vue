@@ -301,8 +301,8 @@ function onProdutoSelecionado(produto: Produto) {
       status: unidade.origem.status,
     })),
     unidadeSelecionada: unidadeSelecionada?.origem ?? null,
-    precoUnitario: unidadeSelecionada?.precoPadrao ?? 0,
-    valorTotal: unidadeSelecionada?.precoPadrao ?? 0,
+    precoUnitario: props.tipoMovimentacao === 'entrada' ? 0 : unidadeSelecionada?.precoPadrao ?? 0,
+    valorTotal: props.tipoMovimentacao === 'entrada' ? 0 : unidadeSelecionada?.precoPadrao ?? 0,
   });
 }
 

@@ -56,14 +56,39 @@ namespace InventoryManagerApi.Services
             return pedido.Id;
         }
 
-        public async Task AtualizarAsync(Pedido pedido)
+        public async Task AtualizarAsync(PedidoCreateDto pedidoCreateDto)
         {
+            var pedido = new Pedido
+            {
+                Id = pedidoCreateDto.Id.Value,
+                ClienteFornecedorId = pedidoCreateDto.ClienteFornecedorId,
+                Observacao = pedidoCreateDto.Observacao,
+                Data = pedidoCreateDto.Data,
+                Status = pedidoCreateDto.Status,
+                Total = pedidoCreateDto.Itens.Sum(item => item.Quantidade * item.PrecoUnitario)
+            };
+
             await _pedidoRepository.UpdateAsync(pedido);
+
+            foreach (var item in pedidoCreateDto.Itens)
+            {
+                var itemPedido = new ItemPedido
+                {
+                    PedidoId = pedido.Id,
+                    ProdutoId = item.ProdutoId,
+                    ProdutoUnidadeVendaId = item.ProdutoUnidadeVendaId,
+                    FatorConversao = item.FatorConversao,
+                    PrecoUnitario = item.PrecoUnitario,
+                    Quantidade = item.Quantidade
+                };
+
+                await _itemPedidoRepository.UpdateAsync(itemPedido);
+            }
         }
 
-        public async Task RemoverAsync(int id)
+        public async Task CancelarAsync(int id)
         {
-            await _pedidoRepository.DeleteAsync(id);
+            await _pedidoRepository.CancelarAsync(id);
         }
     }
 }

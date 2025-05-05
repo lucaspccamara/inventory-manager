@@ -42,19 +42,19 @@ namespace InventoryManagerApi.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPedido(int id, Pedido pedido)
+        public async Task<IActionResult> PutPedido(int id, PedidoCreateDto pedidoCreateDto)
         {
-            if (id != pedido.Id)
+            if (id != pedidoCreateDto.Id)
                 return BadRequest("ID da URL não corresponde ao ID da entidade.");
 
-            await _pedidoService.AtualizarAsync(pedido);
+            await _pedidoService.AtualizarAsync(pedidoCreateDto);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePedido(int id)
+        public async Task<IActionResult> CancelarPedido(int id)
         {
-            await _pedidoService.RemoverAsync(id);
+            await _pedidoService.CancelarAsync(id);
             return NoContent();
         }
     }
