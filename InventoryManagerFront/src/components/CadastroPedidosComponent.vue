@@ -212,6 +212,7 @@ import { Notify } from 'quasar';
 import {
   Pedido,
   PedidoCreateDto,
+  PedidoUpdateDto,
   Produto,
   ProdutoPedidoDto,
   UnidadeConversao,
@@ -338,19 +339,19 @@ const getItensParaSalvar = () => {
   // Itens adicionados: não têm id
   const adicionados = pedido.value.itens.filter(item => !item.id);
 
-  // Itens atualizados: têm id e foram alterados em relação ao original
-  const atualizados = pedido.value.itens.filter(item => {
+  // Itens modificados: têm id e foram alterados em relação ao original
+  const modificados = pedido.value.itens.filter(item => {
     if (!item.id) return false;
     const original = itensOriginais.value.find(orig => orig.id === item.id);
     return original && JSON.stringify(item) !== JSON.stringify(original);
   });
 
   // Itens removidos: estavam na lista original mas não estão mais na atual
-  const removidos = itensOriginais.value.filter(orig =>
-    !pedido.value.itens.some(item => item.id === orig.id)
-  );
+  const removidos = itensOriginais.value
+    .filter(orig => !pedido.value.itens.some(item => item.id === orig.id))
+    .map(orig => orig.id);
 
-  return { adicionados, atualizados, removidos };
+  return { adicionados, modificados, removidos };
 }
 
 // Salvar pedido
@@ -378,18 +379,45 @@ const salvarPedido = async() => {
     }))
   };
 
-  const { adicionados, atualizados, removidos } = getItensParaSalvar();
-  const payload = {
-    ...pedido.value,
-    itensAdicionados: adicionados,
-    itensAtualizados: atualizados,
-    itensRemovidos: removidos
-  };
-
   if (props.idPedido) {
     // Atualizar pedido existente
-    await api.put(`/pedidos/${props.idPedido}`, payload);
-    Notify.create({ message: 'Pedido atualizado com sucesso!', color: 'positive' });
+    const { adicionados, modificados, removidos } = getItensParaSalvar();
+    const pedidoUpdateDto: PedidoUpdateDto = {
+      ...pedidoCreateDto,
+      itensAdicionados: adicionados.map(item => ({
+        id: item.id ?? null,
+        pedidoId: item.pedidoId ?? null,
+        produtoId: item.produtoId,
+        produtoUnidadeVendaId: item.unidadeVendaSelecionada?.id ?? 0,
+        fatorConversao: item.unidadesVenda?.find(un => un.id == item.unidadeVendaSelecionada?.id)?.fator ?? 1,
+        quantidade: item.quantidade,
+        precoUnitario: item.precoUnitario
+      })),
+      itensModificados: modificados.map(item => ({
+        id: item.id,
+        pedidoId: item.pedidoId,
+        produtoId: item.produtoId,
+        produtoUnidadeVendaId: item.unidadeVendaSelecionada?.id ?? 0,
+        fatorConversao: item.unidadesVenda?.find(un => un.id == item.unidadeVendaSelecionada?.id)?.fator ?? 1,
+        quantidade: item.quantidade,
+        precoUnitario: item.precoUnitario
+      })),
+      itensRemovidos: removidos
+    };
+
+    try {
+      await api.put(`/pedidos/${props.idPedido}`, pedidoUpdateDto).then((response) => {
+        if (response.status === 204) {
+          Notify.create({ message: 'Pedido atualizado com sucesso!', color: 'positive' });
+          emit('atualizarLista');
+          emit('fecharDialog');
+        }
+      });
+    } catch (error) {
+      Notify.create({ message: 'Erro ao atualizar pedido', color: 'negative' });
+    } finally {
+      loading.value = false;
+    }
   } else {
     // Salvar novo pedido
     try {

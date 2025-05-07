@@ -63,6 +63,18 @@ export interface PedidoCreateDto {
   itens: ProdutoPedidoCreateDto[];
 }
 
+export interface PedidoUpdateDto {
+  id: number | null;
+  clienteFornecedorId: number | null;
+  status: number;
+  observacao: string;
+  data: Date;
+  itens: ProdutoPedidoCreateDto[];
+  itensAdicionados: ProdutoPedidoCreateDto[];
+  itensModificados: ProdutoPedidoCreateDto[];
+  itensRemovidos: number[];
+}
+
 export interface PedidoTableDto {
   id: number;
   fornecedor: string;

@@ -78,7 +78,7 @@ namespace InventoryManagerApi.Repositories
                 {
                     ProdutoId = itemPedido.ProdutoId,
                     PedidoId = itemPedido.PedidoId,
-                    Quantidade = Math.Abs(diferencaQuantidade),
+                    Quantidade = (int)(Math.Abs(diferencaQuantidade) * itemPedido.FatorConversao),
                     Tipo = diferencaQuantidade > 0
                     ? (pedido.Status == EStatusPedido.Venda ? ETipoMovimentacao.Saida : ETipoMovimentacao.Entrada)
                         : (pedido.Status == EStatusPedido.Venda ? ETipoMovimentacao.Entrada : ETipoMovimentacao.Saida)
@@ -99,18 +99,17 @@ namespace InventoryManagerApi.Repositories
                 var pedido = await _context.Pedidos.FindAsync(itemPedido.PedidoId);
                 if (pedido != null && (pedido.Status == EStatusPedido.Venda || pedido.Status == EStatusPedido.Compra))
                 {
-                    // Registrar movimentação de entrada para reverter a saída
                     var movimentacao = new MovimentacaoEstoque
                     {
                         ProdutoId = itemPedido.ProdutoId,
                         PedidoId = itemPedido.PedidoId,
-                        Quantidade = itemPedido.Quantidade,
+                        Quantidade = (int)(itemPedido.Quantidade * itemPedido.FatorConversao),
                         Tipo = pedido.Status == EStatusPedido.Venda ? ETipoMovimentacao.Entrada : ETipoMovimentacao.Saida
                     };
                     await _movimentacaoEstoqueRepository.AddAsync(movimentacao);
 
                     var produto = await _context.Produtos.FindAsync(itemPedido.ProdutoId);
-                    produto?.AtualizarEstoque(itemPedido.Quantidade, movimentacao.Tipo);
+                    produto?.AtualizarEstoque(movimentacao.Quantidade, movimentacao.Tipo);
                 }
 
                 _context.ItensPedido.Remove(itemPedido);

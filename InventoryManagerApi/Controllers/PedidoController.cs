@@ -42,12 +42,12 @@ namespace InventoryManagerApi.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPedido(int id, PedidoCreateDto pedidoCreateDto)
+        public async Task<IActionResult> PutPedido(int id, PedidoUpdateDto pedidoUpdateDto)
         {
-            if (id != pedidoCreateDto.Id)
+            if (id != pedidoUpdateDto.Id)
                 return BadRequest("ID da URL não corresponde ao ID da entidade.");
 
-            await _pedidoService.AtualizarAsync(pedidoCreateDto);
+            await _pedidoService.AtualizarAsync(pedidoUpdateDto);
             return NoContent();
         }
 

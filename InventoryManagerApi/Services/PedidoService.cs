@@ -56,7 +56,7 @@ namespace InventoryManagerApi.Services
             return pedido.Id;
         }
 
-        public async Task AtualizarAsync(PedidoCreateDto pedidoCreateDto)
+        public async Task AtualizarAsync(PedidoUpdateDto pedidoCreateDto)
         {
             var pedido = new Pedido
             {
@@ -70,7 +70,7 @@ namespace InventoryManagerApi.Services
 
             await _pedidoRepository.UpdateAsync(pedido);
 
-            foreach (var item in pedidoCreateDto.Itens)
+            foreach (var item in pedidoCreateDto.ItensAdicionados)
             {
                 var itemPedido = new ItemPedido
                 {
@@ -82,7 +82,28 @@ namespace InventoryManagerApi.Services
                     Quantidade = item.Quantidade
                 };
 
+                await _itemPedidoRepository.AddAsync(itemPedido);
+            }
+
+            foreach (var item in pedidoCreateDto.ItensModificados)
+            {
+                var itemPedido = new ItemPedido
+                {
+                    Id = item.Id.Value,
+                    PedidoId = pedido.Id,
+                    ProdutoId = item.ProdutoId,
+                    ProdutoUnidadeVendaId = item.ProdutoUnidadeVendaId,
+                    FatorConversao = item.FatorConversao,
+                    PrecoUnitario = item.PrecoUnitario,
+                    Quantidade = item.Quantidade
+                };
+
                 await _itemPedidoRepository.UpdateAsync(itemPedido);
+            }
+
+            foreach (var itemId in pedidoCreateDto.ItensRemovidos)
+            {
+                await _itemPedidoRepository.DeleteAsync(itemId);
             }
         }
 
