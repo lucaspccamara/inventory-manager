@@ -12,7 +12,7 @@
       <q-form @submit.prevent="salvarPedido" class="row q-col-gutter-md">
         <div class="col-6">
           <BuscaClienteFornecedor
-            v-model="clienteFornecedor"
+            v-model="pedido.clienteFornecedor"
             :busca="props.tipoMovimentacao == 'entrada' ? 'fornecedores' : 'clientes'"
             ocultar-tipo-busca
             hint
@@ -108,12 +108,15 @@
               </q-td>
             </template>
   
-            <template v-slot:body-cell-unidadeSelecionada="props">
+            <template v-slot:body-cell-unidadeVendaSelecionada="props">
               <q-td :props="props">
                 <q-select
                   class="unidade-select"
-                  v-model="props.row.unidadeSelecionada"
-                  :options="props.row.unidadesVenda"
+                  v-model="props.row.unidadeVendaSelecionada"
+                  :options="props.row.unidadesVenda.map((unidade: UnidadeConversao) => ({
+                    id: unidade.id,
+                    nome: unidade.origem.nome
+                  }))"
                   option-value="id"
                   option-label="nome"
                   dense
@@ -215,14 +218,11 @@ import {
   UnidadeMedida,
   StatusOpcoesEntrada,
   StatusOpcoesSaida,
-  ClienteFornecedorSelectDto,
-  ApiRequest,
-  ApiResponse
+  ClienteFornecedorSelectDto
 } from './models';
 
 import BuscaClienteFornecedor from './BuscaClienteFornecedorComponent.vue';
 import ProdutosPage from '../pages/ProdutosPage.vue';
-import ConfirmDialog from './ConfirmDialogComponent.vue';
 import CurrencyInput from './CurrencyInput.vue';
 
 const props = defineProps<{
@@ -232,14 +232,11 @@ const props = defineProps<{
 
 const emit = defineEmits(['atualizarLista', 'fecharDialog']);
 
-// Prop do campo de busca de clientes e fornecedores
-const clienteFornecedor = ref<ClienteFornecedorSelectDto | null>(null);
-
 // Setup de datas
 const data = ref('');
 
-function setDefaultDate() {
-  const today = new Date();
+const setDefaultDate = (dateValue: Date | null) => {
+  const today = dateValue ? new Date(dateValue) : new Date();
   data.value = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().split('T')[0] || '';
 
   pedido.value.data = new Date(data.value);
@@ -270,7 +267,7 @@ const pedido = ref<Pedido>({
 const colunas = [
   { name: 'nome', label: 'Produto', field: 'nome', align: 'left' as const, style: 'width: 200px' },
   { name: 'quantidade', label: 'Quantidade', field: 'quantidade', align: 'center' as const, style: 'width: 100px' },
-  { name: 'unidadeSelecionada', label: 'Unidade de Venda', field: 'unidadeSelecionada', align: 'center' as const, style: 'width: 140px' },
+  { name: 'unidadeVendaSelecionada', label: 'Unidade de Venda', field: 'unidadeVendaSelecionada', align: 'center' as const, style: 'width: 140px' },
   { name: 'precoUnitario', label: 'Valor Unitário', field: 'precoUnitario', align: 'center' as const, style: 'width: 150px' },
   { name: 'valorTotal', label: 'Valor Total', field: 'valorTotal', align: 'left' as const, style: 'width: 100px' },
   { name: 'acoes', label: 'Ações', field: 'acoes', align: 'center' as const, style: 'width: 70px' }
@@ -281,11 +278,10 @@ const loading = ref(false);
 
 const dialogSelecionarProduto = ref(false);
 
-function onProdutoSelecionado(produto: Produto) {
+const onProdutoSelecionado = (produto: Produto) => {
   dialogSelecionarProduto.value = false;
 
-  const unidadeConsversao = Array.isArray(produto.unidadesVenda) ? produto.unidadesVenda : [];
-  const unidadeSelecionada = unidadeConsversao.length > 0 && unidadeConsversao[0] ? unidadeConsversao[0] : null;
+  const unidadeVendaSelecionada = produto.unidadesVenda.length > 0 && produto.unidadesVenda[0] ? produto.unidadesVenda[0] : null;
   
   pedido.value.itens.push({
     id: null,
@@ -293,77 +289,43 @@ function onProdutoSelecionado(produto: Produto) {
     produtoId: produto.id ?? 0,
     nome: produto.nome,
     quantidade: 1,
-    unidadeConsversao: unidadeConsversao,
-    unidadesVenda: unidadeConsversao.map((unidade: UnidadeConversao) => ({
-      id: unidade.origem.id,
-      nome: unidade.origem.nome,
-      sigla: unidade.origem.sigla,
-      status: unidade.origem.status,
-    })),
-    unidadeSelecionada: unidadeSelecionada?.origem ?? null,
-    precoUnitario: props.tipoMovimentacao === 'entrada' ? 0 : unidadeSelecionada?.precoPadrao ?? 0,
-    valorTotal: props.tipoMovimentacao === 'entrada' ? 0 : unidadeSelecionada?.precoPadrao ?? 0,
+    unidadesVenda: produto.unidadesVenda,
+    unidadeVendaSelecionada: {
+      id: unidadeVendaSelecionada?.id ?? 0,
+      nome: unidadeVendaSelecionada?.origem.nome ?? '',
+      sigla: unidadeVendaSelecionada?.origem.sigla ?? '',
+      status: unidadeVendaSelecionada?.origem.status ?? true,
+    },
+    precoUnitario: props.tipoMovimentacao === 'entrada' ? 0 : unidadeVendaSelecionada?.precoPadrao ?? 0,
+    valorTotal: props.tipoMovimentacao === 'entrada' ? 0 : unidadeVendaSelecionada?.precoPadrao ?? 0,
   });
 }
 
-function onUnidadeSelecionada(item: ProdutoPedidoDto, unidadeMedida: UnidadeMedida) {
+const onUnidadeSelecionada = (item: ProdutoPedidoDto, unidadeMedida: UnidadeMedida) => {
   // Busca a unidade de conversão correspondente
-  const unidade = (item.unidadeConsversao || []).find(
-    (u: any) => u.origem.id === unidadeMedida.id
+  const unidade = (item.unidadesVenda || []).find(
+    (u: any) => u.id === unidadeMedida.id
   );
-  if (unidade) {
+  if (unidade && props.tipoMovimentacao !== 'entrada') {
     item.precoUnitario = unidade.precoPadrao ?? 0;
     item.valorTotal = Number(item.quantidade) * Number(item.precoUnitario);
   }
 }
 
-function removerItem(item: any) {
+const removerItem = (item: any) => {
   pedido.value.itens = pedido.value.itens.filter(i => i.id !== item.id);
 }
 
 const itensOriginais = ref<any[]>([]);
 // Carregar pedido para edição
-async function carregarPedido(id: number) {
+const carregarPedido = async(id: number) => {
   loading.value = true;
   try {
     const { data: pedidoData } = await api.get<Pedido>(`/pedidos/${id}`);
 
-    // Sincroniza campos principais
-    pedido.value.id = pedidoData.id;
-    pedido.value.clienteFornecedor = pedidoData.clienteFornecedor;
-    pedido.value.observacao = pedidoData.observacao;
-    pedido.value.data = new Date(pedidoData.data);
-    pedido.value.status = pedidoData.status;
+    pedido.value = pedidoData;
+    setDefaultDate(pedidoData.data);
 
-    // Sincroniza campo de busca de cliente/fornecedor
-    //clienteFornecedor.value = pedidoData.clienteFornecedorId?.id || null;
-
-    // Mapeia itens para o formato esperado pela tabela
-    pedido.value.itens = (pedidoData.itens || []).map((item: any) => {
-      // Garante que unidadeConsversao e unidadesVenda estejam no formato esperado
-      const unidadeConsversao = Array.isArray(item.unidadeConsversao) ? item.unidadeConsversao : [];
-      const unidadeSelecionada = unidadeConsversao.find(
-        (u: any) => u.origem.id === item.unidadeSelecionada?.id
-      ) || unidadeConsversao[0] || null;
-
-      return {
-        id: item.id,
-        pedidoId: item.pedidoId,
-        produtoId: item.produtoId,
-        nome: item.nome,
-        quantidade: item.quantidade,
-        unidadeConsversao: unidadeConsversao,
-        unidadesVenda: unidadeConsversao.map((unidade: UnidadeConversao) => ({
-          id: unidade.origem.id,
-          nome: unidade.origem.nome,
-          sigla: unidade.origem.sigla,
-          status: unidade.origem.status,
-        })),
-        unidadeSelecionada: unidadeSelecionada?.origem ?? null,
-        precoUnitario: item.precoUnitario,
-        valorTotal: item.valorTotal,
-      };
-    });
     itensOriginais.value = JSON.parse(JSON.stringify(pedido.value.itens));
   } catch {
     Notify.create({ message: 'Erro ao carregar pedido.', color: 'negative' });
@@ -372,7 +334,7 @@ async function carregarPedido(id: number) {
   }
 }
 
-function getItensParaSalvar() {
+const getItensParaSalvar = () => {
   // Itens adicionados: não têm id
   const adicionados = pedido.value.itens.filter(item => !item.id);
 
@@ -392,7 +354,7 @@ function getItensParaSalvar() {
 }
 
 // Salvar pedido
-async function salvarPedido() {
+const salvarPedido = async() => {
   if (!pedido.value.clienteFornecedor?.id || !pedido.value.data || pedido.value.itens.length === 0) {
     Notify.create({ message: 'Preencha todos os campos obrigatórios e adicione ao menos um item.', color: 'warning' });
     return;
@@ -409,8 +371,8 @@ async function salvarPedido() {
       id: item.id,
       pedidoId: item.pedidoId,
       produtoId: item.produtoId,
-      produtoUnidadeVendaId: item.unidadeSelecionada?.id ?? 0,
-      fatorConversao: item.unidadeConsversao.find(un => un.origem.id == item.unidadeSelecionada?.id)?.fator ?? 1,
+      produtoUnidadeVendaId: item.unidadeVendaSelecionada?.id ?? 0,
+      fatorConversao: item.unidadesVenda?.find(un => un.id == item.unidadeVendaSelecionada?.id)?.fator ?? 1,
       quantidade: item.quantidade,
       precoUnitario: item.precoUnitario
     }))
@@ -463,16 +425,11 @@ watch(
   { deep: true }
 );
 
-// // Sincronizar cliente/fornecedor selecionado com o pedido
-watch(clienteFornecedor, (novo) => {
-  pedido.value.clienteFornecedor = novo;
-});
-
 onMounted(() => {
   if (props.idPedido) {
     carregarPedido(props.idPedido);
   } else {
-    setDefaultDate();
+    setDefaultDate(null);
 
     if(props.tipoMovimentacao === 'entrada') {
       pedido.value.status = StatusOpcoesEntrada[0].value;

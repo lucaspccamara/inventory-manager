@@ -88,9 +88,8 @@ export interface ProdutoPedidoDto {
   produtoId: number;
   nome: string;
   quantidade: number;
-  unidadeConsversao: UnidadeConversao[];
-  unidadesVenda: UnidadeMedida[] | null;
-  unidadeSelecionada: UnidadeMedida | null;
+  unidadesVenda: UnidadeConversao[] | null;
+  unidadeVendaSelecionada: UnidadeMedida | null;
   precoUnitario: number;
   valorTotal: number;
 }

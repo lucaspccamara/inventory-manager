@@ -90,37 +90,58 @@ namespace InventoryManagerApi.Repositories
 
         public async Task<PedidoDto?> GetPedidoDtoByIdAsync(int id)
         {
-            var pedido = await _context.Pedidos
-                .Include(p => p.ClienteFornecedor)
-                .Include(p => p.Itens).ThenInclude(i => i.Produto)
-                .Include(p => p.Itens).ThenInclude(i => i.ProdutoUnidadeVenda)
-                .FirstOrDefaultAsync(p => p.Id == id);
+            var pedidoDto = await _context.Pedidos
+            .Where(p => p.Id == id)
+            .Select(p => new PedidoDto
+            {
+                Id = p.Id,
+                ClienteFornecedor = new ClienteFornecedorSelectDto
+                {
+                    Id = p.ClienteFornecedor.Id,
+                    Nome = p.ClienteFornecedor.Nome
+                },
+                Data = p.Data,
+                Status = p.Status,
+                Observacao = p.Observacao,
+                Itens = p.Itens.Select(i => new ItemPedidoDto
+                {
+                    Id = i.Id,
+                    PedidoId = i.PedidoId,
+                    ProdutoId = i.ProdutoId,
+                    Nome = i.Produto.Nome,
+                    Quantidade = i.Quantidade,
+                    UnidadesVenda = i.Produto.UnidadesVenda.Select(uv => new ProdutoUnidadeVendaDto
+                    {
+                        Id = uv.Id,
+                        ProdutoId = uv.ProdutoId,
+                        Origem = new UnidadeMedidaDto
+                        {
+                            Id = uv.UnidadeMedida.Id,
+                            Nome = uv.UnidadeMedida.Nome,
+                            Sigla = uv.UnidadeMedida.Sigla,
+                            Status = uv.UnidadeMedida.Status
+                        },
+                        Fator = uv.FatorConversao,
+                        PrecoPadrao = uv.PrecoPadrao
+                    }).ToList(),
+                    UnidadeVendaSelecionada = i.Produto.UnidadesVenda
+                        .Where(uv => uv.Id == i.ProdutoUnidadeVendaId)
+                        .Select(uv => new UnidadeMedidaDto
+                        {
+                            Id = uv.Id,
+                            Nome = uv.UnidadeMedida.Nome
+                        }).First(),
+                    PrecoUnitario = i.PrecoUnitario
+                }).ToList()
+            })
+            .FirstOrDefaultAsync();
 
-            if (pedido == null)
+            if (pedidoDto == null)
             {
                 return null;
             }
 
-            return new PedidoDto
-            {
-                Id = pedido.Id,
-                ClienteFornecedorId = pedido.ClienteFornecedorId,
-                ClienteFornecedorNome = pedido.ClienteFornecedor.Nome,
-                Data = pedido.Data,
-                Status = pedido.Status,
-                Observacao = pedido.Observacao,
-                Total = pedido.Total,
-                Itens = pedido.Itens.Select(i => new ItemPedidoDto
-                {
-                    Id = i.Id,
-                    ProdutoId = i.ProdutoId,
-                    ProdutoNome = i.Produto.Nome,
-                    ProdutoUnidadeVendaId = i.ProdutoUnidadeVendaId,
-                    UnidadeMedidaNome = i.ProdutoUnidadeVenda.UnidadeMedida.Nome,
-                    Quantidade = i.Quantidade,
-                    PrecoUnitario = i.PrecoUnitario
-                }).ToList()
-            };
+            return pedidoDto;
         }
 
         public async Task<Pedido?> GetByIdAsync(int id)

@@ -104,7 +104,7 @@
             flat
             round
             icon="edit"
-            @click="editarPedido(props.row.id)"
+            @click="editarPedido(props.row.id, props.row.status === 0)"
           />
           <q-btn
             flat
