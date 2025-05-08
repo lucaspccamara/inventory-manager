@@ -111,5 +111,10 @@ namespace InventoryManagerApi.Services
         {
             await _pedidoRepository.CancelarAsync(id);
         }
+
+        public async Task RestaurarAsync(int id)
+        {
+            await _pedidoRepository.RestaurarAsync(id);
+        }
     }
 }

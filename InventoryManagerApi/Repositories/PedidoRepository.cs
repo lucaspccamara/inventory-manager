@@ -209,5 +209,46 @@ namespace InventoryManagerApi.Repositories
                 }
             }
         }
+
+        public async Task RestaurarAsync(int id)
+        {
+            var pedido = await _context.Pedidos
+                .Include(p => p.Itens)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (pedido == null)
+                return;
+
+            // Defina o novo status conforme o tipo anterior
+            if (pedido.Status == EStatusPedido.CanceladoOrçamento)
+                pedido.Status = EStatusPedido.Orçamento;
+            else if (pedido.Status == EStatusPedido.CanceladoVenda)
+                pedido.Status = EStatusPedido.Venda;
+            else if (pedido.Status == EStatusPedido.CanceladoCompra)
+                pedido.Status = EStatusPedido.Compra;
+
+            _context.Pedidos.Update(pedido);
+            await _context.SaveChangesAsync();
+
+            if (pedido.Status == EStatusPedido.Venda || pedido.Status == EStatusPedido.Compra)
+            {
+                // Gere novamente a movimentação de estoque para cada item
+                foreach (var item in pedido.Itens)
+                {
+                    var movimentacao = new MovimentacaoEstoque
+                    {
+                        ProdutoId = item.ProdutoId,
+                        PedidoId = item.PedidoId,
+                        Quantidade = (int)(item.Quantidade * item.FatorConversao),
+                        Tipo = pedido.Status == EStatusPedido.Compra ? ETipoMovimentacao.Entrada : ETipoMovimentacao.Saida
+                    };
+                    await _context.MovimentacoesEstoque.AddAsync(movimentacao);
+
+                    var produto = await _context.Produtos.FindAsync(item.ProdutoId);
+                    produto?.AtualizarEstoque(movimentacao.Quantidade, movimentacao.Tipo);
+                    await _context.SaveChangesAsync();
+                }
+            }
+        }
     }
 }

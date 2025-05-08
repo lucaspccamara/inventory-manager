@@ -103,17 +103,40 @@
           <q-btn
             flat
             round
+            icon="print"
+            @click="editarPedido(props.row.id, props.row.status === 0)"
+          >
+            <q-tooltip>Imprimir</q-tooltip>
+          </q-btn>
+          <q-btn
+            flat
+            round
             icon="edit"
             @click="editarPedido(props.row.id, props.row.status === 0)"
-          />
+            :disable="props.row.status === 1 || props.row.status === 3 || props.row.status === 5"
+          >
+            <q-tooltip>Editar</q-tooltip>
+          </q-btn>
           <q-btn
+            v-if="props.row.status === 1 || props.row.status === 3 || props.row.status === 5"
+            flat
+            round
+            color="dark"
+            icon="restore_page"
+            @click="restaurarPedido(props.row.id)"
+          >
+            <q-tooltip>Restaurar</q-tooltip>
+          </q-btn>
+          <q-btn
+            v-else
             flat
             round
             color="negative"
             icon="delete"
             @click="dialogConfirmarDelecao = true; idPedidoParaDelecao = props.row.id"
-            :disable="props.row.status === 1 || props.row.status === 3 || props.row.status === 5"
-          />
+          >
+            <q-tooltip>Cancelar</q-tooltip>
+          </q-btn>
         </q-td>
       </template>
     </q-table>
@@ -216,7 +239,7 @@ const colunas = computed(() => [
   { name: 'data', label: 'Data', field: 'data', align: 'center' as const, style: 'width: 120px' },
   { name: 'total', label: 'Total', field: 'total', align: 'left' as const, style: 'width: 120px' },
   { name: 'status', label: 'Status', field: 'status', align: 'center' as const, style: 'width: 150px' },
-  { name: 'acoes', label: 'Ações', field: 'acoes', align: 'center' as const, style: 'width: 100px' }
+  { name: 'acoes', label: 'Ações', field: 'acoes', align: 'center' as const, style: 'width: 160px' }
 ]);
 
 const buscarPedidos = async () => {
@@ -279,6 +302,21 @@ const deletarPedido = async (isConfirmado: boolean) => {
     }
   } else {
     dialogConfirmarDelecao.value = false;
+  }
+};
+
+const restaurarPedido = async (id: number) => {
+  try {
+    await api.put(`/pedidos/${id}/restaurar`).then(() => {
+    }).finally(() => {
+      Notify.create({
+        message: 'Pedido restaurado com sucesso!',
+        color: 'info'
+      });
+    });
+    buscarPedidos();
+  } catch (error) {
+    Notify.create({ message: 'Erro ao restaurar pedido!', color: 'negative' });
   }
 };
 

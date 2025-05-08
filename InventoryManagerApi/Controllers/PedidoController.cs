@@ -57,5 +57,13 @@ namespace InventoryManagerApi.Controllers
             await _pedidoService.CancelarAsync(id);
             return NoContent();
         }
+
+        [HttpPut("{id}/restaurar")]
+        public async Task<IActionResult> RestaurarPedido(int id)
+        {
+            await _pedidoService.RestaurarAsync(id);
+            return NoContent();
+
+        }
     }
 }
