@@ -99,7 +99,16 @@
         </q-td>
       </template>
       <template v-slot:body-cell-acoes="props">
-        <q-td :props="props">
+        <q-td :props="props" class="text-right">
+          <q-btn
+            v-if="props.row.status === 0"
+            flat
+            round
+            icon="shopping_cart_checkout"
+            @click="aprovarOrcamento(props.row.id)"
+          >
+            <q-tooltip>Aprovar</q-tooltip>
+          </q-btn>
           <q-btn
             flat
             round
@@ -239,7 +248,7 @@ const colunas = computed(() => [
   { name: 'data', label: 'Data', field: 'data', align: 'center' as const, style: 'width: 120px' },
   { name: 'total', label: 'Total', field: 'total', align: 'left' as const, style: 'width: 120px' },
   { name: 'status', label: 'Status', field: 'status', align: 'center' as const, style: 'width: 150px' },
-  { name: 'acoes', label: 'Ações', field: 'acoes', align: 'center' as const, style: 'width: 160px' }
+  { name: 'acoes', label: 'Ações', field: 'acoes', align: 'center' as const, style: 'width: 200px' }
 ]);
 
 const buscarPedidos = async () => {
@@ -282,6 +291,23 @@ const editarPedido = (id: number, isOrcamento: boolean = false) => {
   cadastroPedido(id, isOrcamento);
 };
 
+const aprovarOrcamento = async (id: number) => {
+  try {
+    await api.put(`/pedidos/${id}/aprovar`).finally(() => {
+      Notify.create({
+        message: 'Orçamento aprovado com sucesso!',
+        color: 'info'
+      });
+    });
+    buscarPedidos();
+  } catch (error) {
+    Notify.create({
+      message: 'Erro ao aprovar orçamento!',
+      color: 'negative'
+    });
+  }
+};
+
 const deletarPedido = async (isConfirmado: boolean) => {
   if (isConfirmado && idPedidoParaDelecao.value !== null) {
     try {
@@ -305,27 +331,6 @@ const deletarPedido = async (isConfirmado: boolean) => {
   }
 };
 
-const gerarPdfPedido = async (id: number) => {
-  try {
-    const response = await api.get(`/pedidos/${id}/pdf`, { responseType: 'blob' });
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-
-    // Abre o PDF em uma nova aba
-    window.open(url, '_blank');
-    
-    Notify.create({
-      message: 'Gerando PDF...',
-      color: 'info'
-    });
-  } catch (error) {
-    Notify.create({
-      message: 'Erro ao gerar PDF!',
-      color: 'negative'
-    });
-  }
-};
-
 const restaurarPedido = async (id: number) => {
   try {
     await api.put(`/pedidos/${id}/restaurar`).then(() => {
@@ -338,6 +343,27 @@ const restaurarPedido = async (id: number) => {
     buscarPedidos();
   } catch (error) {
     Notify.create({ message: 'Erro ao restaurar pedido!', color: 'negative' });
+  }
+};
+
+const gerarPdfPedido = async (id: number) => {
+  try {
+    const response = await api.get(`/pedidos/${id}/pdf`, { responseType: 'blob' });
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+
+    // Abre o PDF em uma nova aba
+    window.open(url, '_blank');
+
+    Notify.create({
+      message: 'Gerando PDF...',
+      color: 'info'
+    });
+  } catch (error) {
+    Notify.create({
+      message: 'Erro ao gerar PDF!',
+      color: 'negative'
+    });
   }
 };
 

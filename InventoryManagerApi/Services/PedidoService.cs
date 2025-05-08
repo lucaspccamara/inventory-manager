@@ -110,6 +110,11 @@ namespace InventoryManagerApi.Services
             }
         }
 
+        public async Task AprovarAsync(int id)
+        {
+            await _pedidoRepository.AprovarAsync(id);
+        }
+
         public async Task CancelarAsync(int id)
         {
             await _pedidoRepository.CancelarAsync(id);

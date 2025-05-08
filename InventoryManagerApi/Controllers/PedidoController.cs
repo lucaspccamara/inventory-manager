@@ -51,6 +51,13 @@ namespace InventoryManagerApi.Controllers
             return NoContent();
         }
 
+        [HttpPut("{id}/aprovar")]
+        public async Task<IActionResult> AprovarOrcamento(int id)
+        {
+            await _pedidoService.AprovarAsync(id);
+            return NoContent();
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> CancelarPedido(int id)
         {

@@ -161,6 +161,37 @@ namespace InventoryManagerApi.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task AprovarAsync(int id)
+        {
+            var pedido = await _context.Pedidos
+                .Include(p => p.Itens)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (pedido == null)
+                return;
+
+            pedido.Status = EStatusPedido.Venda;
+
+            _context.Pedidos.Update(pedido);
+            await _context.SaveChangesAsync();
+
+            foreach (var item in pedido.Itens)
+            {
+                var movimentacao = new MovimentacaoEstoque
+                {
+                    ProdutoId = item.ProdutoId,
+                    PedidoId = item.PedidoId,
+                    Quantidade = (int)(item.Quantidade * item.FatorConversao),
+                    Tipo = ETipoMovimentacao.Saida
+                };
+                await _context.MovimentacoesEstoque.AddAsync(movimentacao);
+
+                var produto = await _context.Produtos.FindAsync(item.ProdutoId);
+                produto?.AtualizarEstoque(movimentacao.Quantidade, movimentacao.Tipo);
+                await _context.SaveChangesAsync();
+            }
+        }
+
         public async Task CancelarAsync(int id)
         {
             var pedido = await _context.Pedidos.FindAsync(id);
