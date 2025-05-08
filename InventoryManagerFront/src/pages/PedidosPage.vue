@@ -104,7 +104,7 @@
             flat
             round
             icon="print"
-            @click="editarPedido(props.row.id, props.row.status === 0)"
+            @click="gerarPdfPedido(props.row.id)"
           >
             <q-tooltip>Imprimir</q-tooltip>
           </q-btn>
@@ -302,6 +302,27 @@ const deletarPedido = async (isConfirmado: boolean) => {
     }
   } else {
     dialogConfirmarDelecao.value = false;
+  }
+};
+
+const gerarPdfPedido = async (id: number) => {
+  try {
+    const response = await api.get(`/pedidos/${id}/pdf`, { responseType: 'blob' });
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+
+    // Abre o PDF em uma nova aba
+    window.open(url, '_blank');
+    
+    Notify.create({
+      message: 'Gerando PDF...',
+      color: 'info'
+    });
+  } catch (error) {
+    Notify.create({
+      message: 'Erro ao gerar PDF!',
+      color: 'negative'
+    });
   }
 };
 

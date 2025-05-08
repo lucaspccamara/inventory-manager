@@ -65,5 +65,17 @@ namespace InventoryManagerApi.Controllers
             return NoContent();
 
         }
+
+        [HttpGet("{id}/pdf")]
+        public async Task<IActionResult> GerarPdf(int id)
+        {
+            var pedidoDto = await _pedidoService.ObterPorIdAsync(id);
+            if (pedidoDto == null)
+                return NotFound();
+
+            var pdfBytes = _pedidoService.GerarPdf(pedidoDto);
+
+            return File(pdfBytes, "application/pdf", $"pedido_{id}.pdf");
+        }
     }
 }
