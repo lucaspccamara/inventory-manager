@@ -336,20 +336,42 @@ const carregarPedido = async(id: number) => {
 }
 
 const getItensParaSalvar = () => {
-  // Itens adicionados: não têm id
-  const adicionados = pedido.value.itens.filter(item => !item.id);
+  const adicionados: ProdutoPedidoDto[] = [];
+  const modificados: ProdutoPedidoDto[] = [];
+  const removidos: number[] = [];
 
-  // Itens modificados: têm id e foram alterados em relação ao original
-  const modificados = pedido.value.itens.filter(item => {
-    if (!item.id) return false;
-    const original = itensOriginais.value.find(orig => orig.id === item.id);
-    return original && JSON.stringify(item) !== JSON.stringify(original);
+  // Map para facilitar busca pelo id original
+  const originaisMap = new Map(itensOriginais.value.map(orig => [orig.id, orig]));
+
+  // Verifica cada item atual
+  pedido.value.itens.forEach(item => {
+    if (!item.id) {
+      // Item novo
+      adicionados.push(item);
+    } else {
+      const original = originaisMap.get(item.id);
+      if (original) {
+        // Unidade de medida mudou? Remove o original e adiciona o novo
+        if (item.unidadeVendaSelecionada?.id !== original.unidadeVendaSelecionada?.id) {
+          removidos.push(original.id);
+          adicionados.push({ ...item, id: null }); // novo item sem id
+        } else if (
+          item.quantidade !== original.quantidade ||
+          item.precoUnitario !== original.precoUnitario
+        ) {
+          // Só quantidade ou preço mudou
+          modificados.push(item);
+        }
+      }
+    }
   });
 
   // Itens removidos: estavam na lista original mas não estão mais na atual
-  const removidos = itensOriginais.value
-    .filter(orig => !pedido.value.itens.some(item => item.id === orig.id))
-    .map(orig => orig.id);
+  itensOriginais.value.forEach(orig => {
+    if (!pedido.value.itens.some(item => item.id === orig.id)) {
+      removidos.push(orig.id);
+    }
+  });
 
   return { adicionados, modificados, removidos };
 }
@@ -385,7 +407,7 @@ const salvarPedido = async() => {
     const pedidoUpdateDto: PedidoUpdateDto = {
       ...pedidoCreateDto,
       itensAdicionados: adicionados.map(item => ({
-        id: item.id ?? null,
+        id: null,
         pedidoId: item.pedidoId ?? null,
         produtoId: item.produtoId,
         produtoUnidadeVendaId: item.unidadeVendaSelecionada?.id ?? 0,
