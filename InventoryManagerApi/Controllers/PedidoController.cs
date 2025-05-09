@@ -26,7 +26,7 @@ namespace InventoryManagerApi.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetPedido(int id)
         {
-            var pedido = await _pedidoService.ObterPorIdAsync(id);
+            var pedido = await _pedidoService.ObterPedidoDtoPorIdAsync(id);
             if (pedido == null) return NotFound();
             return Ok(pedido);
         }
@@ -76,11 +76,11 @@ namespace InventoryManagerApi.Controllers
         [HttpGet("{id}/pdf")]
         public async Task<IActionResult> GerarPdf(int id)
         {
-            var pedidoDto = await _pedidoService.ObterPorIdAsync(id);
-            if (pedidoDto == null)
+            var pedidoPdfDto = await _pedidoService.ObterPedidoPdfDtoPorIdAsync(id);
+            if (pedidoPdfDto == null)
                 return NotFound();
 
-            var pdfBytes = _pedidoService.GerarPdf(pedidoDto);
+            var pdfBytes = _pedidoService.GerarPdf(pedidoPdfDto);
 
             return File(pdfBytes, "application/pdf", $"pedido_{id}.pdf");
         }

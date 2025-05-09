@@ -23,9 +23,14 @@ namespace InventoryManagerApi.Services
             return await _pedidoRepository.GetPagedAsync(request);
         }
 
-        public async Task<PedidoDto?> ObterPorIdAsync(int id)
+        public async Task<PedidoDto?> ObterPedidoDtoPorIdAsync(int id)
         {
             return await _pedidoRepository.GetPedidoDtoByIdAsync(id);
+        }
+
+        public async Task<PedidoPdfDto?> ObterPedidoPdfDtoPorIdAsync(int id)
+        {
+            return await _pedidoRepository.GetPedidoPdfDtoByIdAsync(id);
         }
 
         public async Task<int> AdicionarAsync(PedidoCreateDto pedidoCreateDto)
@@ -125,7 +130,7 @@ namespace InventoryManagerApi.Services
             await _pedidoRepository.RestaurarAsync(id);
         }
 
-        public byte[] GerarPdf(PedidoDto pedido)
+        public byte[] GerarPdf(PedidoPdfDto pedido)
         {
             QuestPDF.Settings.License = LicenseType.Community;
 
@@ -146,10 +151,16 @@ namespace InventoryManagerApi.Services
                                 {
                                     col2.Item().Text($"Pedido #{pedido.Id}")
                                         .FontSize(22).Bold().FontColor(Colors.Blue.Medium);
-                                    col2.Item().Text($"{(pedido.ClienteFornecedor?.Nome ?? "-")}")
+                                    col2.Item().Text($"{pedido.ClienteFornecedor?.Nome ?? "-"}")
                                         .FontSize(12).FontColor(Colors.Grey.Darken2);
+                                    col2.Item().Text($"{pedido.ClienteFornecedor?.CpfCnpj ?? "-"}")
+                                        .FontSize(10).FontColor(Colors.Grey.Darken2);
+                                    col2.Item().Text($"{pedido.ClienteFornecedor?.Email ?? "-"}")
+                                        .FontSize(10).FontColor(Colors.Grey.Darken2);
                                     col2.Item().Text($"Data: {pedido.Data:dd/MM/yyyy}")
                                         .FontSize(10).FontColor(Colors.Grey.Darken1);
+                                    col2.Item().Text($"Endereço: {pedido.ClienteFornecedor?.Endereco}")
+                                        .FontSize(10).FontColor(Colors.Grey.Darken2);
                                 });
                                 //row.ConstantItem(80).AlignRight().Element(container =>
                                 //{
@@ -213,8 +224,7 @@ namespace InventoryManagerApi.Services
                         });
 
                         // Total do pedido
-                        decimal total = pedido.Itens.Sum(i => i.Quantidade * i.PrecoUnitario);
-                        col.Item().AlignRight().PaddingTop(10).Text($"Total do Pedido: {total:C}").FontSize(14).Bold().FontColor(Colors.Green.Darken2);
+                        col.Item().AlignRight().PaddingTop(10).Text($"Total do Pedido: {pedido.Total:C}").FontSize(14).Bold().FontColor(Colors.Green.Darken2);
                     });
 
                     // Rodapé

@@ -144,6 +144,53 @@ namespace InventoryManagerApi.Repositories
             return pedidoDto;
         }
 
+        public async Task<PedidoPdfDto?> GetPedidoPdfDtoByIdAsync(int id)
+        {
+            var pedidoPdfDto = await _context.Pedidos
+            .Include(p => p.ClienteFornecedor)
+            .Where(p => p.Id == id)
+            .Select(p => new PedidoPdfDto
+            {
+                Id = p.Id,
+                ClienteFornecedor = new ClienteFornecedorDto
+                {
+                    Id = p.ClienteFornecedor.Id,
+                    Nome = p.ClienteFornecedor.Nome,
+                    Endereco = p.ClienteFornecedor.Endereco,
+                    Email = p.ClienteFornecedor.Email,
+                    CpfCnpj = p.ClienteFornecedor.CpfCnpj
+                },
+                Data = p.Data,
+                Status = p.Status,
+                Observacao = p.Observacao,
+                Total = p.Total,
+                Itens = p.Itens.Select(i => new ItemPedidoDto
+                {
+                    Id = i.Id,
+                    PedidoId = i.PedidoId,
+                    ProdutoId = i.ProdutoId,
+                    Nome = i.Produto.Nome,
+                    Quantidade = i.Quantidade,
+                    UnidadeVendaSelecionada = i.Produto.UnidadesVenda
+                        .Where(uv => uv.Id == i.ProdutoUnidadeVendaId)
+                        .Select(uv => new UnidadeMedidaDto
+                        {
+                            Id = uv.Id,
+                            Nome = uv.UnidadeMedida.Nome
+                        }).First(),
+                    PrecoUnitario = i.PrecoUnitario
+                }).ToList()
+            })
+            .FirstOrDefaultAsync();
+
+            if (pedidoPdfDto == null)
+            {
+                return null;
+            }
+
+            return pedidoPdfDto;
+        }
+
         public async Task<Pedido?> GetByIdAsync(int id)
         {
             return await _context.Pedidos.FindAsync(id);
