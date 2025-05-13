@@ -63,7 +63,9 @@ export default defineConfig((/* ctx */) => {
       // polyfillModulePreload: true,
       // distDir
 
-      // extendViteConf (viteConf) {},
+      extendViteConf(viteConf) {
+        viteConf.base = './';
+      },
       // viteVuePluginOptions: {},
       
       vitePlugins: [
@@ -214,6 +216,10 @@ export default defineConfig((/* ctx */) => {
        * @example [ 'my-script.ts', 'sub-folder/my-other-script.js' ]
        */
       extraScripts: []
+    },
+    
+    vite: {
+      base: './', // <-- ESSENCIAL PARA FUNCIONAR NO ELECTRON!
     }
   }
 });

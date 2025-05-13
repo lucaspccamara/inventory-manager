@@ -7,9 +7,17 @@ using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Define caminho seguro para o banco SQLite
+var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+var dbDirectory = Path.Combine(localAppData, "InventoryManager");
+var dbPath = Path.Combine(dbDirectory, "inventory_manager.db");
+
+// Garante que a pasta existe
+Directory.CreateDirectory(dbDirectory);
+
 // Configuração do banco de dados SQLite
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=inventory_manager.db"));
+    options.UseSqlite($"Data Source={dbPath}"));
 
 // Registro dos serviços e repositórios
 builder.Services.AddScoped<ClienteFornecedorService>();

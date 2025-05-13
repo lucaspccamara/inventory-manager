@@ -13,6 +13,10 @@ const routes: RouteRecordRaw[] = [
       { path: 'relatorios', component: () => import('pages/RelatoriosPage.vue') },
       { path: 'configuracoes', component: () => import('pages/ConfiguracoesPage.vue') }
     ],
+  },
+  {
+    path: '/startup',
+    component: () => import('pages/StartupPage.vue')
   }
 ];
 

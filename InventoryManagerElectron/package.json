@@ -1,0 +1,47 @@
+{
+  "name": "inventorymanagerelectron",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^36.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.inventory.manager",
+    "productName": "Inventory Manager",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "../InventoryManagerApi/publish/**/*",
+      "../InventoryManagerFront/dist/spa/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../InventoryManagerApi/publish",
+        "to": "api"
+      },
+      {
+        "from": "../InventoryManagerFront/dist/spa",
+        "to": "frontend"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
