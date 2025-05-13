@@ -46,11 +46,13 @@ namespace InventoryManagerApi.Repositories
             }
 
             int totalRecords = await query.CountAsync();
-            int totalPages = (int)Math.Ceiling((double)totalRecords / request.PageSize);
 
-            var pagedData = await query
-                .Skip((request.Page - 1) * request.PageSize)
-                .Take(request.PageSize)
+            var data = new List<UnidadeMedidaDto>();
+
+            if (request.IsAll)
+            {
+                data = await query
+                .OrderBy(u => u.Nome)
                 .Select(u => new UnidadeMedidaDto
                 {
                     Id = u.Id,
@@ -59,14 +61,29 @@ namespace InventoryManagerApi.Repositories
                     Status = u.Status
                 })
                 .ToListAsync();
+            }
+            else
+            {
+                data = await query
+                    .OrderBy(u => u.Nome)
+                    .Skip((request.Page - 1) * request.PageSize)
+                    .Take(request.PageSize)
+                    .Select(u => new UnidadeMedidaDto
+                    {
+                        Id = u.Id,
+                        Nome = u.Nome,
+                        Sigla = u.Sigla,
+                        Status = u.Status
+                    })
+                    .ToListAsync();
+            }
 
             return new PagedResponse<UnidadeMedidaDto>
             {
-                Data = pagedData,
+                Data = data,
                 TotalRecords = totalRecords,
                 Page = request.Page,
-                PageSize = request.PageSize,
-                TotalPages = totalPages
+                PageSize = request.PageSize
             };
         }
 

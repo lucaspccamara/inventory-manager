@@ -6,7 +6,7 @@ import {
   createWebHistory,
 } from 'vue-router';
 import routes from './routes';
-import { apiStatus, checkApi } from 'boot/check-api'
+import { apiStatus } from 'boot/check-api'
 
 export default defineRouter(function () {
   const createHistory = process.env.SERVER
@@ -19,25 +19,17 @@ export default defineRouter(function () {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
-  let apiChecked = false
-
-  Router.beforeEach(async (to, from, next) => {
-    const isStartupPage = to.path === '/startup'
-    
-    if (!apiChecked && !isStartupPage) {
-      apiStatus.value = 'checking'
-      await checkApi()
-      apiChecked = true
-    }
+  Router.beforeEach((to, from, next) => {
+    const isStartupPage = to.path === '/startup';
 
     if (apiStatus.value === 'ready') {
-      next()
+      next();
     } else if (!isStartupPage) {
-      next({ path: '/startup', query: { redirect: to.fullPath } })
+      next({ path: '/startup', query: { redirect: to.fullPath } });
     } else {
-      next()
+      next();
     }
-  })
+  });
 
   return Router;
 });

@@ -7,5 +7,7 @@
         public int PageSize { get; set; } = 10;
         public string? SortBy { get; set; }
         public bool SortDesc { get; set; } = false;
+
+        public bool IsAll => PageSize == 0;
     }
 }

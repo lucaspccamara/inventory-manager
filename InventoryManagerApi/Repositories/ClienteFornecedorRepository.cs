@@ -51,32 +51,51 @@ namespace InventoryManagerApi.Repositories
             }
 
             int totalRecords = await query.CountAsync();
-            int totalPages = (int)Math.Ceiling((double)totalRecords / request.PageSize);
+            var data = new List< ClienteFornecedorTableDto>();
 
-            var data = await query
-                .Skip((request.Page - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .Select(cf => new ClienteFornecedorTableDto
-                {
-                    Id = cf.Id,
-                    Nome = cf.Nome,
-                    CpfCnpj = cf.CpfCnpj,
-                    Email = cf.Email,
-                    Telefone = cf.Telefone,
-                    Celular = cf.Celular,
-                    Tipo = cf.Tipo,
-                    Status = cf.Status
-                })
-                .OrderBy(cf => cf.Nome)
-                .ToListAsync();
+            if (request.IsAll)
+            {
+                data = await query
+                    .OrderBy(cf => cf.Nome)
+                    .Select(cf => new ClienteFornecedorTableDto
+                    {
+                        Id = cf.Id,
+                        Nome = cf.Nome,
+                        CpfCnpj = cf.CpfCnpj,
+                        Email = cf.Email,
+                        Telefone = cf.Telefone,
+                        Celular = cf.Celular,
+                        Tipo = cf.Tipo,
+                        Status = cf.Status
+                    })
+                    .ToListAsync();
+            }
+            else
+            {
+                data = await query
+                    .OrderBy(cf => cf.Nome)
+                    .Skip((request.Page - 1) * request.PageSize)
+                    .Take(request.PageSize)
+                    .Select(cf => new ClienteFornecedorTableDto
+                    {
+                        Id = cf.Id,
+                        Nome = cf.Nome,
+                        CpfCnpj = cf.CpfCnpj,
+                        Email = cf.Email,
+                        Telefone = cf.Telefone,
+                        Celular = cf.Celular,
+                        Tipo = cf.Tipo,
+                        Status = cf.Status
+                    })
+                    .ToListAsync();
+            }
 
             return new PagedResponse<ClienteFornecedorTableDto>
             {
                 Data = data,
                 TotalRecords = totalRecords,
                 Page = request.Page,
-                PageSize = request.PageSize,
-                TotalPages = totalPages
+                PageSize = request.PageSize
             };
         }
 
@@ -127,26 +146,40 @@ namespace InventoryManagerApi.Repositories
             }
 
             int totalRecords = await query.CountAsync();
-            int totalPages = (int)Math.Ceiling((double)totalRecords / request.PageSize);
 
-            var data = await query
-                .Skip((request.Page - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .Select(cf => new ClienteFornecedorSelectDto
-                {
-                    Id = cf.Id,
-                    Nome = cf.Nome
-                })
-                .OrderBy(cf => cf.Nome)
-                .ToListAsync();
+            var data = new List<ClienteFornecedorSelectDto>();
+
+            if (request.IsAll)
+            {
+                data = await query
+                    .OrderBy(cf => cf.Nome)
+                    .Select(cf => new ClienteFornecedorSelectDto
+                    {
+                        Id = cf.Id,
+                        Nome = cf.Nome
+                    })
+                    .ToListAsync();
+            }
+            else
+            {
+                data = await query
+                    .OrderBy(cf => cf.Nome)
+                    .Skip((request.Page - 1) * request.PageSize)
+                    .Take(request.PageSize)
+                    .Select(cf => new ClienteFornecedorSelectDto
+                    {
+                        Id = cf.Id,
+                        Nome = cf.Nome
+                    })
+                    .ToListAsync();
+            }
 
             return new PagedResponse<ClienteFornecedorSelectDto>
             {
                 Data = data,
                 TotalRecords = totalRecords,
                 Page = request.Page,
-                PageSize = request.PageSize,
-                TotalPages = totalPages
+                PageSize = request.PageSize
             };
         }
 

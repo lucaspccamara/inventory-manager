@@ -1,5 +1,3 @@
-import { ValueScaling } from "vue-currency-input";
-
 //INTERFACES
 export interface ApiRequest<T = any> {
   filter: T;

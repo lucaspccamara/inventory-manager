@@ -46,27 +46,44 @@ namespace InventoryManagerApi.Repositories
             }
 
             int totalRecords = await query.CountAsync();
-            int totalPages = (int)Math.Ceiling((double)totalRecords / request.PageSize);
 
-            var data = await query
-                .Skip((request.Page - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .Select(u => new ProdutoDtoTable
-                {
-                    Id = u.Id,
-                    Nome = u.Nome,
-                    Quantidade = u.Quantidade,
-                    Status = u.Status
-                })
-                .ToListAsync();
+            var data = new List<ProdutoDtoTable>();
+
+            if (request.IsAll)
+            {
+                data = await query
+                    .OrderBy(p => p.Nome)
+                    .Select(u => new ProdutoDtoTable
+                    {
+                        Id = u.Id,
+                        Nome = u.Nome,
+                        Quantidade = u.Quantidade,
+                        Status = u.Status
+                    })
+                    .ToListAsync();
+            }
+            else
+            {
+                data = await query
+                    .OrderBy(p => p.Nome)
+                    .Skip((request.Page - 1) * request.PageSize)
+                    .Take(request.PageSize)
+                    .Select(u => new ProdutoDtoTable
+                    {
+                        Id = u.Id,
+                        Nome = u.Nome,
+                        Quantidade = u.Quantidade,
+                        Status = u.Status
+                    })
+                    .ToListAsync();
+            }
 
             return new PagedResponse<ProdutoDtoTable>
             {
                 Data = data,
                 TotalRecords = totalRecords,
                 Page = request.Page,
-                PageSize = request.PageSize,
-                TotalPages = totalPages
+                PageSize = request.PageSize
             };
         }
 

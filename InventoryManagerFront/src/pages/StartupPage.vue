@@ -38,9 +38,8 @@ function closeApp() {
 }
 
 onMounted(async () => {
-  if (status.value === 'checking') {
-    await checkApi()
-  }
+  apiStatus.value = 'checking'
+  await checkApi()
 })
 
 // Redireciona para a rota original quando a API estiver pronta

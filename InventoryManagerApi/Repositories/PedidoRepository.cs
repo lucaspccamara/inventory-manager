@@ -62,29 +62,46 @@ namespace InventoryManagerApi.Repositories
             }
 
             int totalRecords = await query.CountAsync();
-            int totalPages = (int)Math.Ceiling((double)totalRecords / request.PageSize);
 
-            var data = await query
-                .Skip((request.Page - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .Select(p => new PedidoDtoTable
-                {
-                    Id = p.Id,
-                    ClienteFornecedorNome = p.ClienteFornecedor.Nome,
-                    Data = p.Data,
-                    Status = p.Status,
-                    Total = p.Total
-                })
-                .OrderByDescending(p => p.Id)
-                .ToListAsync();
+            var data = new List<PedidoDtoTable>();
+
+            if (request.IsAll)
+            {
+                data = await query
+                    .OrderByDescending(p => p.Id)
+                    .Select(p => new PedidoDtoTable
+                    {
+                        Id = p.Id,
+                        ClienteFornecedorNome = p.ClienteFornecedor.Nome,
+                        Data = p.Data,
+                        Status = p.Status,
+                        Total = p.Total
+                    })
+                    .ToListAsync();
+            }
+            else
+            {
+                data = await query
+                    .OrderByDescending(p => p.Id)
+                    .Skip((request.Page - 1) * request.PageSize)
+                    .Take(request.PageSize)
+                    .Select(p => new PedidoDtoTable
+                    {
+                        Id = p.Id,
+                        ClienteFornecedorNome = p.ClienteFornecedor.Nome,
+                        Data = p.Data,
+                        Status = p.Status,
+                        Total = p.Total
+                    })
+                    .ToListAsync();
+            }
 
             return new PagedResponse<PedidoDtoTable>
             {
                 Data = data,
                 TotalRecords = totalRecords,
                 Page = request.Page,
-                PageSize = request.PageSize,
-                TotalPages = totalPages
+                PageSize = request.PageSize
             };
         }
 

@@ -59,6 +59,11 @@
             flat
             bordered
             hide-bottom
+            loading-label="Carregando..."
+            rows-per-page-label="Registros por página"
+            :pagination-label="(start, end, total) => `${ start }-${ end } de ${ total }`"
+            no-data-label="Nenhum registro encontrado"
+            no-results-label="Nenhum resultado encontrado"
           >
             <template v-slot:top>
               <q-btn

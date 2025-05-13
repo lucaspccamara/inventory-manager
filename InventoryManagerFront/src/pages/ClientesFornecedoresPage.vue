@@ -68,12 +68,17 @@
     </div>
 
     <q-table
+      v-model:pagination="pagination"
       :rows="response.data"
       :columns="colunas"
       row-key="id"
-
       :loading="loading"
       @request="atualizarPaginacao"
+      loading-label="Carregando..."
+      rows-per-page-label="Registros por página"
+      :pagination-label="(start, end, total) => `${ start }-${ end } de ${ total }`"
+      no-data-label="Nenhum registro encontrado"
+      no-results-label="Nenhum resultado encontrado"
     >
       <template v-slot:body-cell-tipo="props">
         <q-td :props="props">
@@ -185,6 +190,10 @@ const buscarClientesFornecedores = async () => {
     const { data } = await api.post('/clientes/lista', request.value);
 
     response.value = data;
+
+    // Atualiza a paginação do q-table
+    pagination.value.page = data.page;
+    pagination.value.rowsPerPage = data.pageSize;
     pagination.value.rowsNumber = data.totalRecords;
   } catch (error) {
     Notify.create({
