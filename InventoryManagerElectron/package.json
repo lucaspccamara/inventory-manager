@@ -9,6 +9,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "electron-updater": "^6.6.2"
+  },
   "devDependencies": {
     "electron": "^36.2.0",
     "electron-builder": "^26.0.12"
@@ -16,6 +19,13 @@
   "build": {
     "appId": "com.inventory.manager",
     "productName": "Inventory Manager",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "lucaspccamara",
+        "repo": "inventory-manager"
+      }
+    ],
     "directories": {
       "output": "dist"
     },

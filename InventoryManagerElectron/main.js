@@ -1,6 +1,7 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, dialog } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
+const { autoUpdater } = require('electron-updater');
 
 let apiProcess;
 
@@ -40,6 +41,10 @@ app.whenReady().then(() => {
 
   createWindow();
 
+  if (app.isPackaged) {
+    checkForUpdates();
+  }
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
@@ -52,3 +57,44 @@ app.on('window-all-closed', () => {
 app.on('will-quit', () => {
   if (apiProcess) apiProcess.kill();
 });
+
+function checkForUpdates() {
+  autoUpdater.autoDownload = false;
+
+  autoUpdater.checkForUpdates();
+
+  autoUpdater.on('update-available', (info) => {
+    dialog.showMessageBox({
+      type: 'info',
+      buttons: ['Atualizar', 'Agora não'],
+      defaultId: 0,
+      cancelId: 1,
+      title: 'Atualização disponível',
+      message: `Uma nova versão (${info.version}) está disponível.`,
+      detail: 'Deseja fazer o download e instalar agora?'
+    }).then(result => {
+      if (result.response === 0) {
+        autoUpdater.downloadUpdate();
+      }
+    });
+  });
+
+  autoUpdater.on('update-downloaded', () => {
+    dialog.showMessageBox({
+      type: 'question',
+      buttons: ['Reiniciar agora', 'Depois'],
+      defaultId: 0,
+      cancelId: 1,
+      title: 'Atualização pronta',
+      message: 'A atualização foi baixada. Deseja reiniciar agora para aplicar as mudanças?'
+    }).then(result => {
+      if (result.response === 0) {
+        autoUpdater.quitAndInstall();
+      }
+    });
+  });
+
+  autoUpdater.on('error', (error) => {
+    console.error('Erro ao atualizar:', error);
+  });
+}
