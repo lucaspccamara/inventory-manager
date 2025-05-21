@@ -70,19 +70,63 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    // Obter versão atual do executável
-    var currentVersion = typeof(Program).Assembly.GetName().Version?.ToString() ?? "0.0.0.0";
-
-    // Obter versão anterior salva
-    string? lastVersion = null;
-    if (File.Exists(versionFile))
+    var pendingMigrations = dbContext.Database.GetPendingMigrations().ToList();
+    
+    if (pendingMigrations.Count != 0)
     {
-        lastVersion = File.ReadAllText(versionFile).Trim();
-    }
+        var currentVersion = typeof(Program).Assembly.GetName().Version?.ToString() ?? "0.0.0.0";
+        
+        string? lastVersion = null;
+        if (File.Exists(versionFile))
+            lastVersion = File.ReadAllText(versionFile).Trim();
 
-    // Só faz backup se a versão mudou
-    if (lastVersion != currentVersion)
-    {
+        var parts = currentVersion.Split('.').Select(int.Parse).ToArray();
+        parts[3]++; // incrementa o patch
+        var newVersion = $"{parts[0]}.{parts[1]}.{parts[2]}.{parts[3]}";
+        currentVersion = newVersion;
+
+        // Verifica se a versão bate com a atual do projeto
+        if (lastVersion != currentVersion && app.Environment.IsDevelopment())
+        {
+            string csprojFile = null;
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            while (dir != null)
+            {
+                var csproj = dir.GetFiles("*.csproj", SearchOption.TopDirectoryOnly).FirstOrDefault();
+                if (csproj != null)
+                    csprojFile = csproj.FullName;
+                dir = dir.Parent;
+            };
+
+            if (csprojFile != null)
+            {
+                var csprojText = File.ReadAllText(csprojFile);
+                var versionPattern = @"<Version>(.*?)<\/Version>";
+                if (System.Text.RegularExpressions.Regex.IsMatch(csprojText, versionPattern))
+                {
+                    // Atualiza a versão existente
+                    csprojText = System.Text.RegularExpressions.Regex.Replace(
+                        csprojText,
+                        versionPattern,
+                        $"<Version>{currentVersion}</Version>");
+                }
+                else
+                {
+                    // Adiciona a tag Version antes do fechamento do primeiro PropertyGroup
+                    var propertyGroupPattern = @"(<PropertyGroup[^>]*>)";
+                    var match = System.Text.RegularExpressions.Regex.Match(csprojText, propertyGroupPattern);
+                    if (match.Success)
+                    {
+                        var insertIndex = match.Index + match.Length;
+                        csprojText = csprojText.Insert(insertIndex, $"\n    <Version>{currentVersion}</Version>");
+                    }
+                }
+                File.WriteAllText(csprojFile, csprojText);
+                Console.WriteLine($"Versão do projeto atualizada no csproj: {currentVersion}");
+            }
+        }
+
+        // Faz o backup do banco
         if (File.Exists(dbPath))
         {
             var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");

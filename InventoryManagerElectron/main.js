@@ -64,14 +64,21 @@ function checkForUpdates() {
   autoUpdater.checkForUpdates();
 
   autoUpdater.on('update-available', (info) => {
+    const releaseNotes = info.releaseNotes;
+    const releaseName = info.releaseName;
+    const version = info.version;
+
+    let notes = typeof releaseNotes === 'string' ? releaseNotes : releaseNotes.map(r => r.note).join('\n');
+
+    const message = `Uma nova versão (${version}) está disponível.\n\nNotas da versão:\n${notes}\n\nDeseja atualizar agora?`;
+
     dialog.showMessageBox({
       type: 'info',
       buttons: ['Atualizar', 'Agora não'],
       defaultId: 0,
       cancelId: 1,
-      title: 'Atualização disponível',
-      message: `Uma nova versão (${info.version}) está disponível.`,
-      detail: 'Deseja fazer o download e instalar agora?'
+      title: releaseName,
+      message: message,
     }).then(result => {
       if (result.response === 0) {
         autoUpdater.downloadUpdate();
