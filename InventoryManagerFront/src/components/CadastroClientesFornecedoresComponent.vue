@@ -73,8 +73,16 @@
         </div>
 
         <div class="col-12 flex justify-between">
-          <q-checkbox v-model="tipoCliente" label="Cliente" />
-          <q-checkbox v-model="tipoFornecedor" label="Fornecedor" />
+          <q-checkbox
+            v-model="tipoCliente"
+            label="Cliente"
+            :disable="(props.tipoMovimentacao === 'saida' || props.tipoMovimentacao === 'orcamento') && !!props.tipoMovimentacao"
+          />
+          <q-checkbox
+            v-model="tipoFornecedor"
+            label="Fornecedor"
+            :disable="props.tipoMovimentacao === 'entrada' && !!props.tipoMovimentacao"
+          />
           <q-toggle
             v-model="cadastro.status"
             :label="cadastro.status ? 'Status: Ativo' : 'Status: Inativo'"
@@ -89,13 +97,16 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick, onMounted } from 'vue';
-import { ClienteFornecedor, TipoClienteFornecedorType } from './models';
+import { ClienteFornecedor, TipoClienteFornecedorType, ClienteFornecedorSelectDto } from './models';
 import { api } from '../boot/axios';
 import { Notify, QInput } from 'quasar';
 import { AxiosError } from 'axios';
 
-const props = defineProps<{ idClienteFornecedor: number | null }>();
-const emit = defineEmits(['atualizarLista', 'fecharDialog']);
+const props = defineProps<{
+  idClienteFornecedor: number | null,
+  tipoMovimentacao?: 'entrada' | 'saida' | 'orcamento'
+ }>();
+const emit = defineEmits(['atualizarLista', 'fecharDialog', 'retornaSelectDto']);
 
 const cpfCnpjInput = ref<QInput | null>(null);
 const cpfCnpjMask = computed(() => {
@@ -173,7 +184,15 @@ const salvarCadastro = async () => {
     } else {
       await api.post('/clientes', cadastro.value).then((response) => {
         if (response.status === 201)
+        {
           Notify.create({ message: 'Cadastro criado com sucesso!', color: 'positive' });
+
+          const novoCliente: ClienteFornecedorSelectDto = {
+            id: response.data.id,
+            nome: cadastro.value.nome,
+          };
+          emit('retornaSelectDto', novoCliente);
+        }
       });
     }
     emit('atualizarLista');
@@ -183,7 +202,6 @@ const salvarCadastro = async () => {
       message: `${(error as AxiosError)?.response?.data}`,
       color: 'negative'
     });
-    console.log(error);
   }
 };
 
@@ -201,6 +219,14 @@ const carregarCadastro = async (id: number) => {
 };
 
 onMounted(() => {
+  if (props.tipoMovimentacao === 'entrada') {
+    tipoFornecedor.value = true;
+    tipoCliente.value = false;
+  } else if (props.tipoMovimentacao === 'saida' || props.tipoMovimentacao === 'orcamento') {
+    tipoCliente.value = true;
+    tipoFornecedor.value = false;
+  }
+  
   if (props.idClienteFornecedor) {
     carregarCadastro(props.idClienteFornecedor);
   }

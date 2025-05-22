@@ -20,7 +20,15 @@
           />
         </div>
 
-        <div class="col-6">
+        <div class="col-3">
+          <q-btn
+            color="primary"
+            :label="'Novo ' + (props.tipoMovimentacao == 'entrada' ? 'Fornecedor' : 'Cliente')"
+            @click="novoClienteFornecedor"
+          />
+        </div>
+
+        <div class="col-3">
           <div class="row full-width justify-end">
             <q-input
               v-model="data"
@@ -28,7 +36,7 @@
               type="date"
               outlined
               dense
-              class="col-4"
+              class="col-10"
               :rules="[
                 val => !!val || 'Data obrigatória',
                 val => !val || !isNaN(Date.parse(val)) || 'Data inválida'
@@ -208,6 +216,15 @@
       </q-card-section>
     </q-card>
   </q-dialog>
+
+  <q-dialog v-model="dialogCriarClienteFornecedor" persistent class="lg-dialog">
+    <CadastroClientesFornecedores
+      :id-cliente-fornecedor="null"
+      :tipo-movimentacao="props.tipoMovimentacao"
+      @retornaSelectDto="onNovoClienteSelecionado"
+      @onFecharDialog="dialogCriarClienteFornecedor = false"
+    />
+  </q-dialog>
 </template>
 
 <script setup lang="ts">
@@ -229,6 +246,7 @@ import {
 
 import BuscaClienteFornecedor from './BuscaClienteFornecedorComponent.vue';
 import ProdutosPage from '../pages/ProdutosPage.vue';
+import CadastroClientesFornecedores from './CadastroClientesFornecedoresComponent.vue';
 import CurrencyInput from './CurrencyInput.vue';
 
 const props = defineProps<{
@@ -237,6 +255,20 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['atualizarLista', 'fecharDialog']);
+
+// Variaveis de controle do dialog de cliente/fornecedor
+const idClienteFornecedor = ref<number | null>(null);
+const dialogCriarClienteFornecedor = ref(false);
+
+const novoClienteFornecedor = () => {
+  idClienteFornecedor.value = null;
+  dialogCriarClienteFornecedor.value = true;
+};
+
+const onNovoClienteSelecionado = (cliente: ClienteFornecedorSelectDto) => {
+  pedido.value.clienteFornecedor = cliente;
+  dialogCriarClienteFornecedor.value = false;
+}
 
 // Setup de datas
 const data = ref('');
@@ -270,14 +302,17 @@ const pedido = ref<Pedido>({
 });
 
 // Colunas da tabela de itens
-const colunas = [
+const unidadeLabel = computed(() =>
+  props.tipoMovimentacao === 'entrada' ? 'Unidade de Compra' : 'Unidade de Venda'
+);
+const colunas = computed(() => [
   { name: 'nome', label: 'Produto', field: 'nome', align: 'left' as const, style: 'width: 200px' },
   { name: 'quantidade', label: 'Quantidade', field: 'quantidade', align: 'center' as const, style: 'width: 100px' },
-  { name: 'unidadeVendaSelecionada', label: 'Unidade de Venda', field: 'unidadeVendaSelecionada', align: 'center' as const, style: 'width: 140px' },
+  { name: 'unidadeVendaSelecionada', label: unidadeLabel.value, field: 'unidadeVendaSelecionada', align: 'center' as const, style: 'width: 140px' },
   { name: 'precoUnitario', label: 'Valor Unitário', field: 'precoUnitario', align: 'center' as const, style: 'width: 150px' },
   { name: 'valorTotal', label: 'Valor Total', field: 'valorTotal', align: 'left' as const, style: 'width: 100px' },
   { name: 'acoes', label: 'Ações', field: 'acoes', align: 'center' as const, style: 'width: 70px' }
-];
+]);
 
 const filter = ref('');
 const loading = ref(false);
