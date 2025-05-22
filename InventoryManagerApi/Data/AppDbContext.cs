@@ -17,6 +17,10 @@ namespace InventoryManagerApi.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<ClienteFornecedor>()
+            .HasIndex(cf => cf.Nome)
+            .IsUnique();
+
             modelBuilder.Entity<UnidadeMedida>()
             .HasMany(u => u.ProdutosCompra)
             .WithOne(p => p.UnidadeMedidaCompra)

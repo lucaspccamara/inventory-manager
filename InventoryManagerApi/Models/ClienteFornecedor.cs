@@ -11,7 +11,6 @@ namespace InventoryManagerApi.Models
         [MaxLength(255)]
         public string Nome { get; set; }
 
-        [Required]
         [MaxLength(18)]
         public string CpfCnpj { get; set; }
 
