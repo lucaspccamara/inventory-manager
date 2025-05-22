@@ -340,6 +340,8 @@ const onProdutoSelecionado = (produto: Produto) => {
     precoUnitario: props.tipoMovimentacao === 'entrada' ? 0 : unidadeVendaSelecionada?.precoPadrao ?? 0,
     valorTotal: props.tipoMovimentacao === 'entrada' ? 0 : unidadeVendaSelecionada?.precoPadrao ?? 0,
   });
+
+  pedido.value.itens.sort((a, b) => a.nome.localeCompare(b.nome));
 }
 
 const onUnidadeSelecionada = (item: ProdutoPedidoDto, unidadeMedida: UnidadeMedida) => {

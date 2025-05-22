@@ -149,7 +149,7 @@ namespace InventoryManagerApi.Repositories
                             Nome = uv.UnidadeMedida.Nome
                         }).First(),
                     PrecoUnitario = i.PrecoUnitario
-                }).ToList()
+                }).OrderBy(i => i.Nome).ToList()
             })
             .FirstOrDefaultAsync();
 
@@ -196,7 +196,7 @@ namespace InventoryManagerApi.Repositories
                             Nome = uv.UnidadeMedida.Nome
                         }).First(),
                     PrecoUnitario = i.PrecoUnitario
-                }).ToList()
+                }).OrderBy(i => i.Nome).ToList()
             })
             .FirstOrDefaultAsync();
 
