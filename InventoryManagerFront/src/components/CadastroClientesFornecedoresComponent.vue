@@ -26,7 +26,7 @@
             <div class="col">
               <q-input
                 v-model="cadastro.cpfCnpj"
-                label="CPF/CNPJ *"
+                label="CPF/CNPJ"
                 :mask="cpfCnpjMask"
                 :rules="[val => validarCpfCnpj(val)]"
                 lazy-rules
@@ -92,6 +92,7 @@ import { ref, computed, nextTick, onMounted } from 'vue';
 import { ClienteFornecedor, TipoClienteFornecedorType } from './models';
 import { api } from '../boot/axios';
 import { Notify, QInput } from 'quasar';
+import { AxiosError } from 'axios';
 
 const props = defineProps<{ idClienteFornecedor: number | null }>();
 const emit = defineEmits(['atualizarLista', 'fecharDialog']);
@@ -106,7 +107,7 @@ const validarCpfCnpj = (valor: string) => {
   if (!valor) return true;
   const tamanho = valor.length;
   if (tamanho === 14 || tamanho === 18) {
-    return true; // CPF (10 dígitos) ou CNPJ (14 dígitos) é válido
+    return true; // CPF (11 dígitos) ou CNPJ (14 dígitos) é válido
   }
   return 'CPF deve ter 11 dígitos ou CNPJ deve ter 14 dígitos';
 };
@@ -161,7 +162,8 @@ const salvarCadastro = async () => {
   }
 
   cadastro.value.tipo = tipo.value; // Atualiza o tipo com base nos checkboxes
-  
+  cadastro.value.nome = cadastro.value.nome.trim(); // Remove espaços em branco do início e do fim
+
   try {
     if (cadastro.value.id) {
       await api.put(`/clientes/${cadastro.value.id}`, cadastro.value).then((response) => {
@@ -178,9 +180,10 @@ const salvarCadastro = async () => {
     emit('fecharDialog');
   } catch (error) {
     Notify.create({
-      message: 'Erro ao salvar cliente/fornecedor!',
+      message: `${(error as AxiosError)?.response?.data}`,
       color: 'negative'
     });
+    console.log(error);
   }
 };
 

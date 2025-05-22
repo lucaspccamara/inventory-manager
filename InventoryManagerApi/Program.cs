@@ -1,9 +1,11 @@
 using InventoryManagerApi.Data;
+using InventoryManagerApi.Middlewares;
 using InventoryManagerApi.Repositories;
 using InventoryManagerApi.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,6 +65,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseRouting();
+app.UseMiddleware<ExceptionMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
 
@@ -70,16 +73,34 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    var pendingMigrations = dbContext.Database.GetPendingMigrations().ToList();
-    
-    if (pendingMigrations.Count != 0)
+    var lastAppliedMigration = dbContext.Database.GetAppliedMigrations().LastOrDefault();
+    DateTime? lastAppliedMigrationDate = null;
+    if (!string.IsNullOrEmpty(lastAppliedMigration) && lastAppliedMigration.Length >= 14)
+    {
+        var datePart = lastAppliedMigration.Substring(0, 14);
+        if (DateTime.TryParseExact(datePart, "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+            lastAppliedMigrationDate = dt;
+    }
+
+    // Lê versão e data do arquivo
+    string? lastVersion = null;
+    DateTime? lastMigrationDateOnFile = null;
+    if (File.Exists(versionFile))
+    {
+        var content = File.ReadAllText(versionFile).Trim();
+        var parts = content.Split('|');
+        if (parts.Length == 2)
+        {
+            lastVersion = parts[0];
+            if (DateTime.TryParse(parts[1], null, DateTimeStyles.RoundtripKind, out var dt))
+                lastMigrationDateOnFile = dt;
+        }
+    }
+
+    if (lastAppliedMigrationDate != lastMigrationDateOnFile)
     {
         var currentVersion = typeof(Program).Assembly.GetName().Version?.ToString() ?? "0.0.0.0";
         
-        string? lastVersion = null;
-        if (File.Exists(versionFile))
-            lastVersion = File.ReadAllText(versionFile).Trim();
-
         var parts = currentVersion.Split('.').Select(int.Parse).ToArray();
         parts[3]++; // incrementa o patch
         var newVersion = $"{parts[0]}.{parts[1]}.{parts[2]}.{parts[3]}";
@@ -136,7 +157,7 @@ using (var scope = app.Services.CreateScope())
             Console.WriteLine($"Backup criado para nova versão {currentVersion}: {backupFile}");
 
             // Atualiza o arquivo de versão
-            File.WriteAllText(versionFile, currentVersion);
+            File.WriteAllText(versionFile, $"{currentVersion}|{lastAppliedMigrationDate:O}");
         }
 
         // Remove backups antigos (mantém os 3 mais recentes)
