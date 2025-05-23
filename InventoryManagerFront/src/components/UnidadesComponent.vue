@@ -127,6 +127,7 @@ const pagination = ref({
 });
 
 const colunas = [
+  { name: 'id', label: 'ID', field: 'id', align: 'left' as const, style: 'width: 100px' },
   { name: 'nome', label: 'Nome', field: 'nome', align: 'left' as const },
   { name: 'sigla', label: 'Sigla', field: 'sigla', align: 'left' as const },
   { name: 'status', label: 'Status', field: 'status', align: 'left' as const },

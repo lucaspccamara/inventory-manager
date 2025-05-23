@@ -174,6 +174,7 @@ const pagination = ref({
 });
 
 const colunas = [
+  { name: 'id', label: 'ID', field: 'id', align: 'left' as const, style: 'width: 100px' },
   { name: 'nome', label: 'Nome', field: 'nome', align: 'left' as const },
   { name: 'cpfCnpj', label: 'CPF/CNPJ', field: 'cpfCnpj', align: 'left' as const },
   { name: 'contato', label: 'Telefone/Celular', field: 'contato', align: 'left' as const },
